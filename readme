@@ -1,0 +1,21 @@
+=============================================
+InterClient Communication Service
+=============================================
+
+The task of the InterClient Communication Service (ics) is to provide a
+commmunication layer based on the network for communication between users
+based on messages and objects.
+
+
+Furthermore, it provides a method of addressing content: A user can be asked for a 
+content by a name (called "file name", but the mapping is programmable and not 
+strictly bound to files). The transfer, progress and control over it is also handled.
+
+The ics is meant to be network platform independent. Currently, the service has 
+implementations for XMPP.
+
+Why not use an existing library for XMPP?
+-------------------------------------------
+ics-xmpp is based on a very good and popular XMPP library, Smack.
+
+
