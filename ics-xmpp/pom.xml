@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-        <artifactId>parent</artifactId>
-        <groupId>com.jakeapp.jake</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jakeapp.jake</groupId>
     <artifactId>ics-xmpp</artifactId>
     <name>ics-xmpp</name>
     <description>An implementation of the ICS using XMPP.</description>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <url>http://maven.apache.org</url>
     <scm>
         <connection>scm:svn:svn://svn.jakeapp.com/trunk/ics-xmpp/</connection>
@@ -32,6 +27,20 @@
             <layout>default</layout>
         </repository>
     </repositories>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -77,8 +86,6 @@
             <artifactId>junit-ext</artifactId>
             <version>0.6</version>
         </dependency>
-
-
     </dependencies>
     <properties>
         <log4j.version>1.2.14</log4j.version>
