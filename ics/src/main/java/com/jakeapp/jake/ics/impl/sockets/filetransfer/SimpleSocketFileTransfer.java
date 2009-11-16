@@ -24,7 +24,8 @@ import com.jakeapp.jake.ics.filetransfer.runningtransfer.Status;
 
 public class SimpleSocketFileTransfer extends FileTransfer implements Runnable {
 
-	private static Logger log = Logger.getLogger(SimpleSocketFileTransfer.class);
+	private static Logger log = Logger
+			.getLogger(SimpleSocketFileTransfer.class);
 
 	public static final String FILE_REQUEST = "file?";
 
@@ -40,14 +41,18 @@ public class SimpleSocketFileTransfer extends FileTransfer implements Runnable {
 
 	private Socket s;
 
+	private AESObject aes;
+
 	public SimpleSocketFileTransfer(FileRequest r, InetSocketAddress other,
-			UUID transferKey, int maximalRequestAgeSeconds) throws IOException {
+			UUID transferKey, int maximalRequestAgeSeconds, AESObject aes)
+			throws IOException {
 		this.request = r;
 		this.other = other;
+		this.aes = aes;
 		this.transferKey = transferKey;
 		this.localFile = File.createTempFile("socket", "output");
 		this.s = new Socket();
-		log.debug("connecting to socket:  " + this.other );
+		log.debug("connecting to socket:  " + this.other);
 		this.s.connect(this.other, maximalRequestAgeSeconds * 1000);
 		this.status = Status.negotiated;
 	}
@@ -66,13 +71,13 @@ public class SimpleSocketFileTransfer extends FileTransfer implements Runnable {
 				this.status = Status.in_progress;
 
 			OutputStream socketOut = this.s.getOutputStream();
-			BufferedOutputStream fileOut = new BufferedOutputStream(new FileOutputStream(
-					this.localFile));
+			BufferedOutputStream fileOut = new BufferedOutputStream(
+					new FileOutputStream(this.localFile));
 
 			log.debug("sending request");
 			socketOut.write(this.transferKey.toString().getBytes());
 			socketOut.flush();
-			InputStream in = this.s.getInputStream();
+			InputStream in = aes.decrypt(this.s.getInputStream());
 
 			while (this.status == Status.in_progress) {
 				log.debug("receiving content ... ");
@@ -100,8 +105,10 @@ public class SimpleSocketFileTransfer extends FileTransfer implements Runnable {
 			 * FileChannel out = new FileOutputStream(this.localFile).getChannel();
 			 * 
 			 * log.debug(&quot;retrieving data ...&quot;);
-			 * while (!this.s.socket().isClosed() &amp;&amp; out.isOpen() &amp;&amp; this.status != Status.cancelled) {
-			 * 	this.amountWritten += out.transferFrom(this.s, this.amountWritten, BLOCKSIZE);
+			 * while (!this.s.socket().isClosed() &amp;&amp; out.isOpen()
+			 * 		&amp;&amp; this.status != Status.cancelled) {
+			 * 	this.amountWritten += out.transferFrom(this.s, this.amountWritten,
+			 * 			BLOCKSIZE);
 			 * 	log.debug(&quot;already received &quot; + this.amountWritten + &quot; bytes.&quot;);
 			 * 	Thread.yield();
 			 * 	// TODO: remove (is for debugging)
@@ -113,7 +120,8 @@ public class SimpleSocketFileTransfer extends FileTransfer implements Runnable {
 			 * }
 			 * </pre>
 			 **/
-			log.debug("retrieving data done: " + amountWritten + " bytes written");
+			log.debug("retrieving data done: " + amountWritten
+					+ " bytes written");
 		} catch (IOException e) {
 			log.error("transfer failed", e);
 			setError(e.getMessage());

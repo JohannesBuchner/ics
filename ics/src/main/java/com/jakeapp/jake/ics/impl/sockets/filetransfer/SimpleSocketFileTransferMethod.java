@@ -29,17 +29,26 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.KeySpec;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKeyFactory;
 
 // TODO: timeouts for negotiations
 public class SimpleSocketFileTransferMethod implements ITransferMethod,
 		IMessageReceiveListener {
+
 	private static final Logger log = Logger
 			.getLogger(SimpleSocketFileTransferMethod.class);
 
 	private static final String ADDRESS_REQUEST = "<addressrequest/>";
+
 	private static final String ADDRESS_RESPONSE = "<addressresponse/>";
+
 	private static final String GOT_REQUESTED_FILE = "<file/>";
 
 	private static final int BLOCKSIZE = 1024;
@@ -53,6 +62,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 	private Queue<FileRequest> outgoingRequests = new LinkedBlockingQueue<FileRequest>();
 
 	private Map<UUID, FileRequest> incomingRequests = new HashMap<UUID, FileRequest>();
+
+	private Map<UUID, AESObject> encryptionRequests = new HashMap<UUID, AESObject>();
 
 	private Map<FileRequest, Long> requestAge = new HashMap<FileRequest, Long>();
 
@@ -68,10 +79,11 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 
 	private final int port;
 
-	private static final int UUID_LENGTH = UUID.randomUUID().toString().length();
+	private static final int UUID_LENGTH = UUID.randomUUID().toString()
+			.length();
 
-	public SimpleSocketFileTransferMethod(int maximalRequestAgeSeconds, int port,
-			IMsgService negotiationService, UserId user) {
+	public SimpleSocketFileTransferMethod(int maximalRequestAgeSeconds,
+			int port, IMsgService negotiationService, UserId user) {
 		log.debug("creating SimpleSocketFileTransferMethod for user " + user);
 		this.maximalRequestAgeSeconds = maximalRequestAgeSeconds;
 		this.port = port;
@@ -102,12 +114,14 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 					if (age > SimpleSocketFileTransferMethod.this.maximalRequestAgeSeconds) {
 						this.log.debug("removing old request");
 						synchronized (SimpleSocketFileTransferMethod.this.requestAge) {
-							SimpleSocketFileTransferMethod.this.requestAge.remove(key);
+							SimpleSocketFileTransferMethod.this.requestAge
+									.remove(key);
 							SimpleSocketFileTransferMethod.this.outgoingRequests
 									.remove(key);
 							try {
-								SimpleSocketFileTransferMethod.this.listeners.remove(key)
-									.failed(new TimeoutException());
+								SimpleSocketFileTransferMethod.this.listeners
+										.remove(key).failed(
+												new TimeoutException());
 							} catch (Exception ignored) {
 								log.warn("Ignoring Exception", ignored);
 							}
@@ -124,8 +138,9 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 	@Override
 	public void request(FileRequest r, INegotiationSuccessListener nsl) {
 		log.debug(myUserId + ": We request " + r);
-		String request = SimpleSocketFileTransferFactory.START + ADDRESS_REQUEST
-				+ r.getFileName() + SimpleSocketFileTransferFactory.END;
+		String request = SimpleSocketFileTransferFactory.START
+				+ ADDRESS_REQUEST + r.getFileName()
+				+ SimpleSocketFileTransferFactory.END;
 
 		synchronized (this.requestAge) {
 			this.listeners.put(r, nsl);
@@ -143,6 +158,7 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			try {
 				nsl.failed(e);
 			} catch (Exception ignored) {
+				log.info("Listener died", ignored);
 			}
 			removeOutgoing(r);
 		}
@@ -154,10 +170,12 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 				|| !content.endsWith(SimpleSocketFileTransferFactory.END))
 			return;
 
-		String inner = content.substring(SimpleSocketFileTransferFactory.START.length(),
-				content.length() - SimpleSocketFileTransferFactory.END.length());
+		String inner = content.substring(SimpleSocketFileTransferFactory.START
+				.length(), content.length()
+				- SimpleSocketFileTransferFactory.END.length());
 
-		log.debug(myUserId + ": receivedMessage : " + from_userid + " : " + inner);
+		log.debug(myUserId + ": receivedMessage : " + from_userid + " : "
+				+ inner);
 
 		if (inner.startsWith(ADDRESS_REQUEST)) {
 			handleAddressRequest(from_userid, inner);
@@ -170,11 +188,14 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			 * third step, client receives no ok from server
 			 */
 			// we are the client, server doesn't have it
-			for (FileRequest r : getRequestsForUser(outgoingRequests, from_userid)) {
+			for (FileRequest r : getRequestsForUser(outgoingRequests,
+					from_userid)) {
 				INegotiationSuccessListener nsl = this.listeners.get(r);
 				try {
-					nsl.failed(new OtherUserDoesntHaveRequestedContentException());
+					nsl
+							.failed(new OtherUserDoesntHaveRequestedContentException());
 				} catch (Exception ignored) {
+					log.info("Listener died", ignored);
 				}
 				removeOutgoing(r);
 			}
@@ -183,9 +204,10 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			 * third step, client receives ok from server
 			 */
 			handleServerOk(from_userid, inner);
-		} else if(inner.startsWith(FILE_RESPONSE_DONT_HAVE)) {
-			log.info("Got response: User " + from_userid + " doesn't have file.");
-		}	else {
+		} else if (inner.startsWith(FILE_RESPONSE_DONT_HAVE)) {
+			log.info("Got response: User " + from_userid
+					+ " doesn't have file.");
+		} else {
 			log.warn("unknown request from " + from_userid + ": " + content);
 		}
 	}
@@ -193,12 +215,19 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 	private void handleServerOk(UserId from_userid, String inner) {
 		// we are the client
 		try {
-			String innerWithoutType = inner.substring(GOT_REQUESTED_FILE.length());
-			UUID transferKey = UUID
-					.fromString(innerWithoutType.substring(0, UUID_LENGTH));
+			String innerWithoutType = inner.substring(GOT_REQUESTED_FILE
+					.length());
+			UUID transferKey = UUID.fromString(innerWithoutType.substring(0,
+					UUID_LENGTH));
 			log.debug(myUserId + ": I got the transferKey " + transferKey);
 
-			String innerWithoutTransferKey = innerWithoutType.substring(UUID_LENGTH);
+			int strkeylen = AESObject.getKeylength();
+			AESObject aes = new AESObject(innerWithoutType.substring(
+					UUID_LENGTH, UUID_LENGTH + strkeylen));
+			log.debug(myUserId + ": I got the decryptionKey " + aes.getKey());
+
+			String innerWithoutTransferKey = innerWithoutType
+					.substring(UUID_LENGTH + strkeylen);
 
 			int pos = innerWithoutTransferKey.indexOf(ADDRESS_RESPONSE);
 
@@ -209,12 +238,13 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 
 			FileRequest fr = new FileRequest(filename, false, from_userid);
 
-			log.debug(myUserId + ": Do I have the request to " + from_userid + "? "
-					+ outgoingRequests.contains(fr) + " : " + fr);
+			log.debug(myUserId + ": Do I have the request to " + from_userid
+					+ "? " + outgoingRequests.contains(fr) + " : " + fr);
 
 			if (!outgoingRequests.contains(fr)) {
-				log.warn(from_userid
-						+ " violated the protocol (sent offer without request)");
+				log
+						.warn(from_userid
+								+ " violated the protocol (sent offer without request)");
 				return;
 			}
 
@@ -227,45 +257,59 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 				if (add[0].charAt(0) == '/')
 					add[0] = add[0].substring(1);
 				log.debug("setting ip address ...");
-				InetSocketAddress otherSocketAddress = new InetSocketAddress(add[0], Integer
-						.parseInt(add[1]));
+				InetSocketAddress otherSocketAddress = new InetSocketAddress(
+						add[0], Integer.parseInt(add[1]));
 				log.debug("setting ip address :" + otherSocketAddress);
 
 				this.serverAdresses.put(from_userid, otherSocketAddress);
-				for (FileRequest fileRequest : getRequestsForUser(outgoingRequests, from_userid)) {
-					INegotiationSuccessListener nsl = this.listeners.get(fileRequest);
+				for (FileRequest fileRequest : getRequestsForUser(
+						outgoingRequests, from_userid)) {
+					INegotiationSuccessListener nsl = this.listeners
+							.get(fileRequest);
 
 					/*
 					 * fourth step, the client starts the out-of-band transfer
 					 */
-					SimpleSocketFileTransfer ft = new SimpleSocketFileTransfer(fileRequest, otherSocketAddress,
-							transferKey, maximalRequestAgeSeconds);
+					SimpleSocketFileTransfer ft = new SimpleSocketFileTransfer(
+							fileRequest, otherSocketAddress, transferKey,
+							maximalRequestAgeSeconds, aes);
 					new Thread(ft).start();
 					log.info("negotiation with " + from_userid + " succeeded");
 					try {
 						nsl.succeeded(ft);
 					} catch (Exception ignored) {
+						log.info("Listener died", ignored);
 					}
 					removeOutgoing(fileRequest);
 				}
 			} catch (Exception exception) {
-				log.info("negotiation with " + from_userid + " failed: ", exception);
-				for (FileRequest fileRequest : getRequestsForUser(outgoingRequests, from_userid)) {
-					INegotiationSuccessListener nsl = this.listeners.get(fileRequest);
+				log.info("negotiation with " + from_userid + " failed: ",
+						exception);
+				for (FileRequest fileRequest : getRequestsForUser(
+						outgoingRequests, from_userid)) {
+					INegotiationSuccessListener nsl = this.listeners
+							.get(fileRequest);
 					try {
 						nsl.failed(exception);
 					} catch (Exception ignored) {
+						log.info("Listener died", ignored);
 					}
 					removeOutgoing(fileRequest);
 				}
 			}
 		} catch (IndexOutOfBoundsException e) {
-			log.warn(from_userid
-					+ " packet came not as [GOT_REQUESTED_FILE<uuid><filename>]"
-					+ "ADDRESS_RESPONSE[<address>]");
+			log
+					.warn(from_userid
+							+ " packet came not as [GOT_REQUESTED_FILE<uuid><filename>]"
+							+ "ADDRESS_RESPONSE[<address>]");
 			return;
 		} catch (IllegalArgumentException e) {
-			log.warn(from_userid + " violated the protocol (sent invalid transferKey)");
+			log.warn(from_userid
+					+ " violated the protocol (sent invalid transferKey)");
+			return;
+		} catch (GeneralSecurityException e) {
+			log.warn(from_userid + " unexpected encryption/decryption problem",
+					e);
 			return;
 		}
 		log.debug("done with " + ADDRESS_RESPONSE + " from " + from_userid);
@@ -280,8 +324,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 		FileRequest fr = new FileRequest(filename, true, from_userid);
 
 		InetSocketAddress add = provideAddresses();
-		log.debug(myUserId.getUserId() + " : " + from_userid + " wants our ip, " + add
-				+ " and wants  " + filename);
+		log.debug(myUserId.getUserId() + " : " + from_userid
+				+ " wants our ip, " + add + " and wants  " + filename);
 		log.debug("Do we serve at all? ");
 		String response = SimpleSocketFileTransferFactory.START;
 		boolean success = true;
@@ -296,11 +340,21 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 
 				File localFile = mapper.getFileForRequest(fr);
 
-				if (localFile != null) {
-					response += GOT_REQUESTED_FILE + registerTransferKey(localFile, fr)
-							+ filename;
-					response += ADDRESS_RESPONSE + add.toString();
-				} else {
+				AESObject aes;
+				try {
+					aes = new AESObject();
+
+					if (localFile != null) {
+						response += GOT_REQUESTED_FILE
+								+ registerTransferKey(localFile, fr, aes);
+						response += aes.getKey();
+						response += filename;
+						response += ADDRESS_RESPONSE + add.toString();
+					} else {
+						success = false;
+					}
+				} catch (GeneralSecurityException e) {
+					log.error("We don't support encryption! (why?)", e);
 					success = false;
 				}
 			}
@@ -318,14 +372,17 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 		}
 	}
 
-	private UUID registerTransferKey(File localFile, FileRequest fr) {
+	private UUID registerTransferKey(File localFile, FileRequest fr,
+			AESObject aes) {
 		UUID u = UUID.randomUUID();
 		fr.setData(new AdditionalFileTransferData(localFile));
 		this.incomingRequests.put(u, fr);
+		this.encryptionRequests.put(u, aes);
 		return u;
 	}
 
-	private List<FileRequest> getRequestsForUser(Queue<FileRequest> frq, UserId userid) {
+	private List<FileRequest> getRequestsForUser(Queue<FileRequest> frq,
+			UserId userid) {
 		List<FileRequest> rq = new LinkedList<FileRequest>();
 		for (FileRequest r : frq) {
 			if (r.getPeer().equals(userid)) {
@@ -336,7 +393,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 	}
 
 	private void removeOutgoing(FileRequest r) {
-		log.debug("I'm done with outgoing request " + r + " (one way or the other)");
+		log.debug("I'm done with outgoing request " + r
+				+ " (one way or the other)");
 		synchronized (this.requestAge) {
 			this.outgoingRequests.remove(r);
 			this.listeners.remove(r);
@@ -349,8 +407,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 	}
 
 	@Override
-	public void startServing(IncomingTransferListener l, FileRequestFileMapper mapper)
-			throws NotLoggedInException {
+	public void startServing(IncomingTransferListener l,
+			FileRequestFileMapper mapper) throws NotLoggedInException {
 		log.debug(this.myUserId + ": startServing");
 
 		this.incomingTransferListener = l;
@@ -393,10 +451,11 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			Enumeration<InetAddress> iaddresses = iface.getInetAddresses();
 			while (iaddresses.hasMoreElements()) {
 				InetAddress iaddress = iaddresses.nextElement();
-				if (!iaddress.isLoopbackAddress() && !iaddress.isLinkLocalAddress()) {
+				if (!iaddress.isLoopbackAddress()
+						&& !iaddress.isLinkLocalAddress()) {
 					// host candidate
-					return new InetSocketAddress(iaddress.getHostAddress(), server
-							.getLocalPort());
+					return new InetSocketAddress(iaddress.getHostAddress(),
+							server.getLocalPort());
 				}
 			}
 		}
@@ -412,7 +471,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 
 		private IncomingTransferListener listener;
 
-		public ServingThread(ServerSocket serverSocket, IncomingTransferListener l) {
+		public ServingThread(ServerSocket serverSocket,
+				IncomingTransferListener l) {
 			this.socket = serverSocket;
 			this.listener = l;
 		}
@@ -467,9 +527,15 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 						.get(requestKey);
 				if (fr != null) {
 					this.log.debug("request: " + fr + " accepted");
-					sendContent(fr, this.listener);
+					sendContent(
+							fr,
+							this.listener,
+							SimpleSocketFileTransferMethod.this.encryptionRequests
+									.get(requestKey));
 					// prevent replay attacks
 					SimpleSocketFileTransferMethod.this.incomingRequests
+							.remove(requestKey);
+					SimpleSocketFileTransferMethod.this.encryptionRequests
 							.remove(requestKey);
 				} else {
 					log.warn("got invalid/unknown requestKey");
@@ -488,7 +554,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			}
 		}
 
-		public void sendContent(FileRequest request, IncomingTransferListener listener) {
+		public void sendContent(FileRequest request,
+				IncomingTransferListener listener, AESObject aes) {
 
 			this.request = request;
 
@@ -500,7 +567,7 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			InputStream source;
 			try {
 				source = new FileInputStream(this.localFile);
-				OutputStream out = this.client.getOutputStream();
+				OutputStream out = aes.encrypt(this.client.getOutputStream());
 				this.status = Status.in_progress;
 				if (source != null) {
 					byte[] b = new byte[BLOCKSIZE];
@@ -514,7 +581,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 					}
 					out.flush();
 					out.close();
-					log.debug("sending content done:" + amountWritten + " bytes written");
+					log.debug("sending content done:" + amountWritten
+							+ " bytes written");
 				} else {
 					setError(new FileNotFoundException());
 				}

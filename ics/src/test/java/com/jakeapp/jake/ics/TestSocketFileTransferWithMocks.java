@@ -28,6 +28,7 @@ import org.junit.Test;
 import com.jakeapp.jake.ics.filetransfer.negotiate.FileRequest;
 import com.jakeapp.jake.ics.filetransfer.runningtransfer.Status;
 import com.jakeapp.jake.ics.impl.mock.MockUserId;
+import com.jakeapp.jake.ics.impl.sockets.filetransfer.AESObject;
 import com.jakeapp.jake.ics.impl.sockets.filetransfer.SimpleSocketFileTransfer;
 
 public class TestSocketFileTransferWithMocks {
@@ -68,7 +69,8 @@ public class TestSocketFileTransferWithMocks {
 		FileRequest fr = new FileRequest("myfile.txt", true, new MockUserId("otherpeer"));
 		UUID key = UUID.randomUUID();
 		InetSocketAddress server = prepareServer(key);
-		SimpleSocketFileTransfer client = new SimpleSocketFileTransfer(fr, server, key, 10);
+		AESObject aes = new MockAESObject();
+		SimpleSocketFileTransfer client = new SimpleSocketFileTransfer(fr, server, key, 10, aes);
 		new Thread(client).start();
 		while (!client.isDone()) {
 			log.debug("client filetransfer status: " + client.getStatus() + " - "
