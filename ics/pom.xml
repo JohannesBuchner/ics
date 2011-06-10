@@ -5,7 +5,7 @@
 	<artifactId>ics</artifactId>
 	<name>ics</name>
 	<description>The Interclient Communication Service provides low-level clients communication methods.</description>
-	<version>1.2-SNAPSHOT</version>
+	<version>1.3-SNAPSHOT</version>
 	<url>http://jakeapp.com</url>
 	<scm>
 		<connection>scm:svn:svn://svn.jakeapp.com/trunk/ics/</connection>

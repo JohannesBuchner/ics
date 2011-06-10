@@ -1,10 +1,8 @@
 package com.jakeapp.jake.ics.impl.sockets.filetransfer;
 
-
 import org.apache.log4j.Logger;
 
 import com.jakeapp.jake.ics.UserId;
-import com.jakeapp.jake.ics.exceptions.NotLoggedInException;
 import com.jakeapp.jake.ics.filetransfer.methods.ITransferMethod;
 import com.jakeapp.jake.ics.filetransfer.methods.ITransferMethodFactory;
 import com.jakeapp.jake.ics.msgservice.IMsgService;
@@ -33,16 +31,17 @@ public class SimpleSocketFileTransferFactory implements ITransferMethodFactory {
 		this.maximalRequestAgeSeconds = maximalRequestAgeSeconds;
 	}
 
-	public SimpleSocketFileTransferFactory(int maximalRequestAgeSeconds, int port) {
+	public SimpleSocketFileTransferFactory(int maximalRequestAgeSeconds,
+			int port) {
 		this(maximalRequestAgeSeconds);
 		this.port = port;
 	}
 
 	@Override
-	public ITransferMethod getTransferMethod(IMsgService negotiationService, UserId user)
-			throws NotLoggedInException {
-		return new SimpleSocketFileTransferMethod(this.maximalRequestAgeSeconds,
-				this.port, negotiationService,
+	public ITransferMethod getTransferMethod(IMsgService negotiationService,
+			UserId user) {
+		return new SimpleSocketFileTransferMethod(
+				this.maximalRequestAgeSeconds, this.port, negotiationService,
 				user);
 	}
 }

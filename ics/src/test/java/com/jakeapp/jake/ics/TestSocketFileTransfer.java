@@ -160,7 +160,7 @@ public class TestSocketFileTransfer {
 
 			@Override
 			public void failed(Throwable reason) {
-				this.log.debug("clientside negotiation failed: " + reason);
+				this.log.debug("clientside negotiation failed: ", reason);
 				t.step("clientside negotiation failed");
 				Assert.fail();
 			}

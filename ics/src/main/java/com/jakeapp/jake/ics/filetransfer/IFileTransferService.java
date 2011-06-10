@@ -64,8 +64,8 @@ public interface IFileTransferService {
 	 * @param user
 	 * @throws NotLoggedInException
 	 */
-	void addTransferMethod(ITransferMethodFactory m, IMsgService negotiationService,
-			UserId user) throws NotLoggedInException;
+	void addTransferMethod(ITransferMethodFactory m,
+			IMsgService negotiationService, UserId user);
 
 	/**
 	 * requests a file and handles fail-over (this is a facade)
@@ -84,8 +84,8 @@ public interface IFileTransferService {
 	 * @param mapper
 	 * @throws NotLoggedInException
 	 */
-	public void startServing(IncomingTransferListener l, FileRequestFileMapper mapper)
-			throws NotLoggedInException;
+	public void startServing(IncomingTransferListener l,
+			FileRequestFileMapper mapper) throws NotLoggedInException;
 
 	/**
 	 * stops serving on all registered TransferMethods

@@ -6,7 +6,7 @@
     <artifactId>ics-xmpp</artifactId>
     <name>ics-xmpp</name>
     <description>An implementation of the ICS using XMPP.</description>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.3-SNAPSHOT</version>
     <url>http://maven.apache.org</url>
     <scm>
         <connection>scm:svn:svn://svn.jakeapp.com/trunk/ics-xmpp/</connection>
@@ -55,7 +55,7 @@
         <dependency>
             <groupId>com.jakeapp.jake</groupId>
             <artifactId>ics</artifactId>
-            <version>1.1</version>
+            <version>1.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.igniterealtime.smack</groupId>

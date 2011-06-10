@@ -1,6 +1,5 @@
 package com.jakeapp.jake.ics.impl.xmpp.filetransfer;
 
-
 import org.apache.log4j.Logger;
 import org.jivesoftware.smack.XMPPConnection;
 
@@ -31,9 +30,8 @@ public class XmppFileTransferFactory implements ITransferMethodFactory {
 	}
 
 	@Override
-	public ITransferMethod getTransferMethod(IMsgService negotiationService, UserId user)
-			throws NotLoggedInException {
-		return new XmppFileTransferMethod(connection, negotiationService,
-				user);
+	public ITransferMethod getTransferMethod(IMsgService negotiationService,
+			UserId user) {
+		return new XmppFileTransferMethod(connection, negotiationService, user);
 	}
 }
