@@ -1,0 +1,38 @@
+	--------------------------
+	About the ICS
+
+About the ICS
+
+  ${project.description}
+  
+  The whole point of the ICS (Inter-Communication Service) is to define a communication interface for IM-like systems, and to provide the following functionality:
+  
+  * Logging in / Logging out
+  
+  * Creating accounts
+  
+  * Listing contacts and retrieving information about them such as their status
+  
+  * Sending messages
+  
+  * File transfers, including a failover mechanism that allows in-band and out-of-band transfers.
+  
+  The interface aims to be asynchronous.
+
+Interface API
+
+  Start to look at the API:
+
+  * {{{apidocs/com/jakeapp/jake/ics/ICService.html}ICService}}
+  
+  * {{{apidocs/com/jakeapp/jake/ics/status/IStatusService.html}IStatusService}}
+  
+  * {{{apidocs/com/jakeapp/jake/ics/users/IUsersService.html}IUsersService}}
+  
+  * {{{apidocs/com/jakeapp/jake/ics/msgservice/IMsgService.html}IMsgService}}
+  
+  * {{{apidocs/com/jakeapp/jake/ics/filetransfer/methods/ITransferMethodFactory.html}ITransferMethodFactory}}
+
+Implementations
+
+  Known implementations: {{{ics-xmpp}http://jakeapp.sourceforgen.net/ics-xmpp}}.
