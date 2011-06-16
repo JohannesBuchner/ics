@@ -25,19 +25,10 @@
 			<name>Christian Sutter</name>
 		</developer>
 		<developer>
-			<name>Simon Wallner</name>
-		</developer>
-		<developer>
 			<name>Peter Steinberger</name>
 		</developer>
 		<developer>
-			<name>Philipp Knobelspies</name>
-		</developer>
-		<developer>
 			<name>Christopher Cerny</name>
-		</developer>
-		<developer>
-			<name>Dominik Dorn</name>
 		</developer>
 	</developers>
 	<url>http://jakeapp.sourceforge.net/ics-xmpp/</url>
