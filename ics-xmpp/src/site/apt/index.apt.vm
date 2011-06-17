@@ -5,5 +5,5 @@ About ICS-XMPP
 
   ${project.description}
   
-  ICS-XMPP implements the {{{ics}http://jakeapp.sourceforgen.net/ics}}, and provides all
+  ICS-XMPP implements the {{{http://jakeapp.sourceforgen.net/ics}ICS}}, and provides all
 functionality using XMPP (based on the smack library).
