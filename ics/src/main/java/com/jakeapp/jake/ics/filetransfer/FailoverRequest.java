@@ -43,7 +43,7 @@ public class FailoverRequest implements INegotiationSuccessListener {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void failed(Throwable reason) {
+	public void failed(Exception reason) {
 		this.counter++;
 		// if
 		// (reason.getClass().equals(CommunicationProblemException.class)) {

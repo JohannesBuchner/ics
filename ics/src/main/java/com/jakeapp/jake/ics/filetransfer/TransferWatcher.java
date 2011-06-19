@@ -5,11 +5,11 @@ import org.apache.log4j.Logger;
 import com.jakeapp.jake.ics.filetransfer.runningtransfer.IFileTransfer;
 import com.jakeapp.jake.ics.filetransfer.runningtransfer.Status;
 
-public class TransferWatcherThread implements Runnable {
+public class TransferWatcher implements Runnable {
 
 	public static final int UPDATE_FREQUENCY = 300;
 
-	private static final Logger log = Logger.getLogger(TransferWatcherThread.class);
+	private static final Logger log = Logger.getLogger(TransferWatcher.class);
 
 	/**
 	 * after this timeout (in seconds) when no progress is made, the transfer is
@@ -30,12 +30,12 @@ public class TransferWatcherThread implements Runnable {
 
 	private int update_frequency = UPDATE_FREQUENCY;
 
-	public TransferWatcherThread(IFileTransfer transfer, ITransferListener listener) {
+	public TransferWatcher(IFileTransfer transfer, ITransferListener listener) {
 		this.transfer = transfer;
 		this.listener = listener;
 	}
 
-	public TransferWatcherThread(IFileTransfer transfer, ITransferListener listener,
+	public TransferWatcher(IFileTransfer transfer, ITransferListener listener,
 			int update_frequency) {
 		this(transfer, listener);
 		this.update_frequency = update_frequency;
@@ -80,7 +80,7 @@ public class TransferWatcherThread implements Runnable {
 				}
 				nochangeCounter = 0;
 			} else {
-				nochangeCounter = nochangeCounter + UPDATE_FREQUENCY;
+				nochangeCounter = nochangeCounter + update_frequency;
 			}
 
 			status = this.transfer.getStatus();

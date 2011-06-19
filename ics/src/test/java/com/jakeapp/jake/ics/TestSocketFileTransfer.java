@@ -159,7 +159,7 @@ public class TestSocketFileTransfer {
 			private Logger log = Logger.getLogger("Main:INegotiationSuccessListener");
 
 			@Override
-			public void failed(Throwable reason) {
+			public void failed(Exception reason) {
 				this.log.debug("clientside negotiation failed: ", reason);
 				t.step("clientside negotiation failed");
 				Assert.fail();
@@ -210,7 +210,7 @@ public class TestSocketFileTransfer {
 			private Logger log = Logger.getLogger("Main:INegotiationSuccessListener");
 
 			@Override
-			public void failed(Throwable reason) {
+			public void failed(Exception reason) {
 				this.log.debug("clientside negotiation failed: " + reason);
 				t.step("clientside negotiation failed");
 				Assert.assertEquals(reason.getClass(),
@@ -245,7 +245,7 @@ public class TestSocketFileTransfer {
 			private Logger log = Logger.getLogger("Main:INegotiationSuccessListener");
 
 			@Override
-			public void failed(Throwable reason) {
+			public void failed(Exception reason) {
 				this.log.debug("clientside negotiation failed: " + reason);
 				t.step("clientside negotiation failed");
 				Assert.assertEquals(reason.getClass(),

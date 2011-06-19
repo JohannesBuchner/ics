@@ -8,7 +8,7 @@ import com.jakeapp.jake.ics.filetransfer.FailoverCapableFileTransferService;
 import com.jakeapp.jake.ics.filetransfer.FileRequestFileMapper;
 import com.jakeapp.jake.ics.filetransfer.ITransferListener;
 import com.jakeapp.jake.ics.filetransfer.IncomingTransferListener;
-import com.jakeapp.jake.ics.filetransfer.TransferWatcherThread;
+import com.jakeapp.jake.ics.filetransfer.TransferWatcher;
 import com.jakeapp.jake.ics.filetransfer.methods.ITransferMethodFactory;
 import com.jakeapp.jake.ics.filetransfer.negotiate.FileRequest;
 import com.jakeapp.jake.ics.filetransfer.negotiate.INegotiationSuccessListener;
@@ -164,7 +164,7 @@ public class TestFailoverTransfers {
 		this.failover2.request(request, new INegotiationSuccessListener() {
 
 			@Override
-			public void failed(Throwable reason) {
+			public void failed(Exception reason) {
 				Assert.fail();
 				t.step("negotiation failed");
 			}
@@ -192,7 +192,7 @@ public class TestFailoverTransfers {
 		Assert.assertEquals(ftserver.getFileName(), filename);
 		Assert.assertEquals(ftserver.getLocalFile(), file);
 
-		new Thread(new TransferWatcherThread(ftserver, new ITransferListener() {
+		new Thread(new TransferWatcher(ftserver, new ITransferListener() {
 
 			@Override
 			public void onFailure(AdditionalFileTransferData transfer, String error) {

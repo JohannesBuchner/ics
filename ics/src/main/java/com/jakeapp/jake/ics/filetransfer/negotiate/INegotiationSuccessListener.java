@@ -16,7 +16,7 @@ public interface INegotiationSuccessListener {
 	 *
 	 * @param reason
 	 */
-	public void failed(Throwable reason);
+	public void failed(Exception reason);
 
 	/**
 	 * This TransferMethod worked. Follow the given {@link IFileTransfer} now.
