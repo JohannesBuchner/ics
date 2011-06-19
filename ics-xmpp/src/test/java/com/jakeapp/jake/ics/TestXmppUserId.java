@@ -12,7 +12,8 @@ public class TestXmppUserId {
 
 	private XmppUserId shortUserId = new XmppUserId("foo@bar");
 
-	private XmppUserId longUserId = new XmppUserId("johannes.buchner@my.favorite.host");
+	private XmppUserId longUserId = new XmppUserId(
+			"johannes.buchner@my.favorite.host");
 
 	@Test
 	public void testShortHost() throws Exception {
@@ -36,7 +37,8 @@ public class TestXmppUserId {
 
 	@Test
 	public void testSameUserDifferentRessource() throws Exception {
-		Assert.assertTrue(XmppUserId.isSameUser(new XmppUserId("foo@bar/Pidgin"),
+		Assert.assertTrue(XmppUserId.isSameUser(
+				new XmppUserId("foo@bar/Pidgin"),
 				new XmppUserId("foo@bar/MIRC")));
 	}
 
@@ -54,8 +56,8 @@ public class TestXmppUserId {
 
 	@Test
 	public void testEqualsDifferentRessource2a() {
-		Assert.assertFalse(new MockUserId("foo@bar/Pidgin").equals(new XmppUserId(
-				"foo@bar/MIRC")));
+		Assert.assertFalse(new MockUserId("foo@bar/Pidgin")
+				.equals(new XmppUserId("foo@bar/MIRC")));
 	}
 
 	@Test
@@ -66,8 +68,8 @@ public class TestXmppUserId {
 
 	@Test
 	public void testEqualsDifferentRessource4() {
-		Assert.assertFalse(new XmppUserId("foo@bar/MIRC").equals(new MockUserId(
-				"foo@baz/Pidgin")));
+		Assert.assertFalse(new XmppUserId("foo@bar/MIRC")
+				.equals(new MockUserId("foo@baz/Pidgin")));
 	}
 
 	@Test

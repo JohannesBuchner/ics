@@ -17,7 +17,8 @@ import com.jakeapp.jake.test.XmppTestEnvironment;
 @RunWith(PrerequisiteAwareClassRunner.class)
 public class TestXmppUserStatus {
 
-	private static final Logger log = Logger.getLogger(TestXmppUserStatus.class);
+	private static final Logger log = Logger
+			.getLogger(TestXmppUserStatus.class);
 
 	private ICService ics = null;
 
@@ -40,9 +41,12 @@ public class TestXmppUserStatus {
 	@Prerequisite(checker = XmppTestEnvironment.class)
 	public void setUp() throws Exception {
 		// if (TestEnvironment.serverIsAvailable()) {
-		XmppTestEnvironment.assureUserIdExistsAndConnect(shortUserid1, testUser1Passwd);
-		XmppTestEnvironment.assureUserIdExistsAndConnect(onlineUserId, testUser1Passwd);
-		XmppTestEnvironment.assureUserIdExistsAndConnect(offlineUserId, testUser1Passwd);
+		XmppTestEnvironment.assureUserIdExistsAndConnect(shortUserid1,
+				testUser1Passwd);
+		XmppTestEnvironment.assureUserIdExistsAndConnect(onlineUserId,
+				testUser1Passwd);
+		XmppTestEnvironment.assureUserIdExistsAndConnect(offlineUserId,
+				testUser1Passwd);
 
 		this.ics = new XmppICService(testnamespace, testgroupname);
 		ics.getStatusService().login(shortUserid1, testUser1Passwd, null, 0);

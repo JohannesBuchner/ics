@@ -10,24 +10,28 @@ import java.util.List;
 
 
 public class FailoverRequest implements INegotiationSuccessListener {
+
 	private Logger log = Logger.getLogger(FailoverRequest.class);
+
 	private int counter = 0;
+
 	private List<ITransferMethod> methods;
+
 	private FileRequest request;
 
 	private INegotiationSuccessListener parentListener;
 
-	public FailoverRequest(FileRequest request, INegotiationSuccessListener nsl, final List<ITransferMethod> methods) {
+	public FailoverRequest(FileRequest request,
+			INegotiationSuccessListener nsl, final List<ITransferMethod> methods) {
 		this.request = request;
 		this.parentListener = nsl;
 		this.methods = methods;
-		getTransferMethod(this.counter)
-				.request(this.request, this);
+		getTransferMethod(this.counter).request(this.request, this);
 	}
 
 	/**
 	 * returns null if index is out of range
-	 *
+	 * 
 	 * @param index
 	 * @return
 	 */

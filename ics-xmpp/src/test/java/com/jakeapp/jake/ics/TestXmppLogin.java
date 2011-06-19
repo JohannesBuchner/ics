@@ -71,29 +71,32 @@ public class TestXmppLogin {
 	public void testGetFirstNameThrowsNoSuchUseridException() throws Exception {
 		ics.getStatusService().getFirstname(wrongUserid1);
 	}
+
 	@Test(expected = NoSuchUseridException.class)
 	@Prerequisite(checker = XmppTestEnvironment.class)
 	public void testGetLastNameThrowsNoSuchUseridException() throws Exception {
 		ics.getStatusService().getLastname(wrongUserid1);
 	}
+
 	@Test
 	@Prerequisite(checker = XmppTestEnvironment.class)
 	public void testGetFirstName() throws Exception {
-		Assert.assertEquals("foo", ics.getStatusService().getFirstname(
-				offlineUserId));
+		Assert.assertEquals("foo",
+				ics.getStatusService().getFirstname(offlineUserId));
 	}
+
 	@Test
 	@Prerequisite(checker = XmppTestEnvironment.class)
 	public void testGetLastName() throws Exception {
-		Assert.assertEquals("bar", ics.getStatusService().getLastname(
-				offlineUserId));
+		Assert.assertEquals("bar",
+				ics.getStatusService().getLastname(offlineUserId));
 	}
 
 	@Test
 	@Prerequisite(checker = XmppTestEnvironment.class)
 	public void testGetNames() throws Exception {
-		Assert.assertEquals("", ics.getStatusService().getFirstname(
-				shortUserid1));
+		Assert.assertEquals("",
+				ics.getStatusService().getFirstname(shortUserid1));
 		Assert.assertEquals("", ics.getStatusService()
 				.getLastname(shortUserid1));
 	}
@@ -113,14 +116,12 @@ public class TestXmppLogin {
 			Assert.fail();
 		} catch (NoSuchUseridException e) {
 		}
-		ics.getStatusService().login(shortUserid1,
-				testUser1Passwd, null, 0);
+		ics.getStatusService().login(shortUserid1, testUser1Passwd, null, 0);
 		Assert.assertTrue(ics.getStatusService().isLoggedIn());
 		ics.getStatusService().logout();
 		Assert.assertFalse(ics.getStatusService().isLoggedIn());
 
-		ics.getStatusService().login(offlineUserId,
-				testUser1Passwd, null, 0);
+		ics.getStatusService().login(offlineUserId, testUser1Passwd, null, 0);
 		ics.getStatusService().logout();
 	}
 }

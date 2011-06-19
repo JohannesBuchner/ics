@@ -54,7 +54,7 @@ public class TransferWatcher implements Runnable {
 					+ this.transfer.getPeer() + ": was NOT successful: "
 					+ this.transfer.getError());
 			this.listener.onFailure(this.transfer.getFileRequest().getData(),
-				this.transfer.getError());
+					this.transfer.getError());
 		}
 		log.debug(Thread.currentThread() + " done");
 	}
@@ -73,9 +73,9 @@ public class TransferWatcher implements Runnable {
 			} else if (status != this.transfer.getStatus()
 					|| progress != this.transfer.getProgress()) {
 				try {
-					this.listener.onUpdate(this.transfer.getFileRequest().getData(),
-						this.transfer
-						.getStatus(), this.transfer.getProgress());
+					this.listener.onUpdate(this.transfer.getFileRequest()
+							.getData(), this.transfer.getStatus(),
+							this.transfer.getProgress());
 				} catch (Exception ignored) {
 				}
 				nochangeCounter = 0;

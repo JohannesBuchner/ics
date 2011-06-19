@@ -15,7 +15,7 @@ public class XmppUserTool {
 	static private XMPPConnection connection = null;
 
 	static private String resourcename = "usertool";
-	
+
 	public static void usage() {
 		System.out.println("SYNAPSIS: XmppUserTool <xmppid> <xmpppw> <action>");
 		System.out.println("\txmppid, xmpppw\tcredentials for login");
@@ -47,7 +47,8 @@ public class XmppUserTool {
 		if (action.equals("login") || action.equals("delete")) {
 			try {
 				try {
-					connection = XmppCommons.login(xmppid, xmpppw, null, 0, resourcename);
+					connection = XmppCommons.login(xmppid, xmpppw, null, 0,
+							resourcename);
 				} catch (XMPPException e) {
 					// ignore
 				}

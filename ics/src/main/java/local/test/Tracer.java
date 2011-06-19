@@ -32,6 +32,7 @@ public class Tracer {
 
 	/**
 	 * checks that no steps are left
+	 * 
 	 * @param time
 	 * @param unit
 	 * @return
@@ -51,6 +52,7 @@ public class Tracer {
 
 	/**
 	 * checks that no steps are left
+	 * 
 	 * @return
 	 */
 	public boolean isDone() {

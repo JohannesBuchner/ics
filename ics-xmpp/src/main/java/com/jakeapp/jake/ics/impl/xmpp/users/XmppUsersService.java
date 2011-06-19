@@ -32,7 +32,7 @@ public class XmppUsersService implements IUsersService {
 	private Set<IOnlineStatusListener> onlinereceivers = new HashSet<IOnlineStatusListener>();
 
 	private Set<String> runningDiscoveryThreads = new HashSet<String>();
-	
+
 	public XmppUsersService(XmppConnectionData connection) {
 		this.con = connection;
 	}
@@ -43,11 +43,11 @@ public class XmppUsersService implements IUsersService {
 	}
 
 	public void addUser(UserId user, String name) throws NoSuchUseridException,
-			  NotLoggedInException, IOException {
+			NotLoggedInException, IOException {
 		assertLoggedIn();
 		RosterEntry re = getGroup().getEntry(getXmppId(user));
 		if (re == null) {
-			String[] groups = {this.con.getGroupname()};
+			String[] groups = { this.con.getGroupname() };
 			try {
 				getRoster().createEntry(getXmppId(user), name, groups);
 			} catch (XMPPException e) {
@@ -65,13 +65,14 @@ public class XmppUsersService implements IUsersService {
 
 	private void assertLoggedIn() throws NotLoggedInException {
 		if (!this.con.getService().getStatusService().isLoggedIn()) {
-			log.warn("user not logged in: " + this.con.getService().getStatusService().getUserid());
+			log.warn("user not logged in: "
+					+ this.con.getService().getStatusService().getUserid());
 			throw new NotLoggedInException();
 		}
 	}
 
 	public void removeUser(UserId user) throws NotLoggedInException,
-			  NoSuchUseridException, IOException {
+			NoSuchUseridException, IOException {
 		assertLoggedIn();
 		RosterEntry re = getGroup().getEntry(getXmppId(user));
 
@@ -94,9 +95,9 @@ public class XmppUsersService implements IUsersService {
 		assertLoggedIn();
 
 		RosterEntry entry = getGroup().getEntry(user.getUserId());
-		if(entry == null) {
+		if (entry == null) {
 			return "";
-		}else{
+		} else {
 			return entry.getName();
 		}
 	}
@@ -111,7 +112,7 @@ public class XmppUsersService implements IUsersService {
 		}
 		return users;
 	}
-	
+
 	public Iterable<UserId> getAllUsers() throws NotLoggedInException {
 		assertLoggedIn();
 
@@ -157,8 +158,8 @@ public class XmppUsersService implements IUsersService {
 			this.log.trace("trying to discover capabilities for user ...");
 			int tries = 2;
 			while (tries > 0
-					  && XmppUsersService.this.con.getService()
-					  .getStatusService().isLoggedIn())
+					&& XmppUsersService.this.con.getService()
+							.getStatusService().isLoggedIn())
 				try {
 					if (isCapable(this.xmppid)) {
 						if (isFriend(this.xmppid)) {
@@ -169,7 +170,8 @@ public class XmppUsersService implements IUsersService {
 					break;
 				} catch (IOException e) {
 					// fixme: why is this fired that often?
-					this.log.debug("discovering capabilities failed!" + e.getMessage());
+					this.log.debug("discovering capabilities failed!"
+							+ e.getMessage());
 					tries--;
 					try {
 						Thread.sleep(1000);
@@ -196,17 +198,18 @@ public class XmppUsersService implements IUsersService {
 
 	private boolean isCapable(String xmppid) throws IOException {
 		ServiceDiscoveryManager discoManager = ServiceDiscoveryManager
-				  .getInstanceFor(this.con.getConnection());
+				.getInstanceFor(this.con.getConnection());
 		log.trace("discovering user " + xmppid);
 		DiscoverInfo discoInfo;
 		try {
 			discoInfo = discoManager.discoverInfo(xmppid);
 		} catch (XMPPException e) {
-			log.debug("Something weird happened (mostly just no response)" + e.getMessage());
+			log.debug("Something weird happened (mostly just no response)"
+					+ e.getMessage());
 			throw new IOException(e);
 		}
 		log.trace("discovery returned: " + discoInfo.getExtensions().size()
-				  + " features");
+				+ " features");
 		for (PacketExtension i : discoInfo.getExtensions()) {
 			log.debug("discovery returned: namespace: " + i.getNamespace());
 		}
@@ -221,13 +224,13 @@ public class XmppUsersService implements IUsersService {
 	}
 
 	public boolean isCapable(UserId userid) throws IOException,
-			  NotLoggedInException, NoSuchUseridException {
+			NotLoggedInException, NoSuchUseridException {
 		assertLoggedIn();
 		return isCapable(getXmppId(userid));
 	}
 
 	public void requestOnlineNotification(UserId userid)
-			  throws NotLoggedInException {
+			throws NotLoggedInException {
 		Presence presence = getRoster().getPresence(userid.getUserId());
 		String xmppid = userid.getUserId();
 		log.trace("presenceChanged: " + xmppid + " - " + presence);
@@ -242,7 +245,7 @@ public class XmppUsersService implements IUsersService {
 
 	@Override
 	public boolean isFriend(UserId userid) throws NotLoggedInException,
-			  NoSuchUseridException {
+			NoSuchUseridException {
 		assertLoggedIn();
 		return getGroup().contains(getXmppId(userid));
 	}

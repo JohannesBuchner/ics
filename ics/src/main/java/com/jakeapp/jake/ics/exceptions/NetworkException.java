@@ -3,7 +3,7 @@ package com.jakeapp.jake.ics.exceptions;
 /**
  * @author domdorn, johannes
  * 
- * Is used on unexpected connection breakdown, transmission abort, etc. 
+ *         Is used on unexpected connection breakdown, transmission abort, etc.
  */
 @SuppressWarnings("serial")
 public class NetworkException extends Exception {

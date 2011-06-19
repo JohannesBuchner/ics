@@ -16,7 +16,8 @@ public class XmppICService extends ICService {
 
 	public XmppICService(String namespace, String groupname) {
 		this.connection = new XmppConnectionData(this, namespace, groupname);
-		this.fileTransferMethodFactory = new XmppFileTransferFactory(this.connection);
+		this.fileTransferMethodFactory = new XmppFileTransferFactory(
+				this.connection);
 		this.statusService = new XmppStatusService(this.connection);
 		this.msgService = new XmppMsgService(this.connection);
 		this.usersService = new XmppUsersService(this.connection);

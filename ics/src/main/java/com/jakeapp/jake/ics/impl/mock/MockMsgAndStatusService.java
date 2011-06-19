@@ -24,11 +24,11 @@ import java.util.Set;
 /**
  * This implements both the IMsgService and the IStatusService, usually you will
  * want to share common data using the constructors
- *
+ * 
  * @author johannes
  */
 public class MockMsgAndStatusService implements IMsgService, IStatusService,
-		  IUsersService {
+		IUsersService {
 
 	static Logger log = Logger.getLogger(MockMsgAndStatusService.class);
 
@@ -69,8 +69,9 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 		if (!userid.getUserId().contains(".")) {
 			return "";
 		}
-		return userid.getUserId().substring(userid.getUserId().indexOf(".") + 1,
-				  userid.getUserId().indexOf("@"));
+		return userid.getUserId().substring(
+				userid.getUserId().indexOf(".") + 1,
+				userid.getUserId().indexOf("@"));
 	}
 
 	public UserId getUserId(String userid) {
@@ -95,7 +96,8 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 	/**
 	 * users having a s in the userid before the \@ are online
 	 */
-	public Boolean isLoggedIn(UserId userid) throws NetworkException, TimeoutException {
+	public Boolean isLoggedIn(UserId userid) throws NetworkException,
+			TimeoutException {
 		if (!new MockUserId(userid).isOfCorrectUseridFormat())
 			throw new NoSuchUseridException();
 		if (userid.equals(myuserid))
@@ -104,14 +106,15 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 			throw new NotLoggedInException();
 
 		/* everyone else not having a s in the name is offline */
-		return userid.getUserId().substring(0, userid.getUserId().indexOf("@")).contains(
-				  "s");
+		return userid.getUserId().substring(0, userid.getUserId().indexOf("@"))
+				.contains("s");
 	}
 
 	/**
 	 * Login is successful, if userid == pw
 	 */
-	public void login(UserId userid, String pw, String host, long port) throws NetworkException {
+	public void login(UserId userid, String pw, String host, long port)
+			throws NetworkException {
 		if (!new MockUserId(userid).isOfCorrectUseridFormat())
 			throw new NoSuchUseridException();
 		if (loggedinstatus)
@@ -119,7 +122,8 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 		if (userid.equals(pw)) {
 			myuserid = userid;
 			loggedinstatus = true;
-			log.info("login was successful!!! set loggedinstatus: " + loggedinstatus);
+			log.info("login was successful!!! set loggedinstatus: "
+					+ loggedinstatus);
 			fireConnectionStateChanged(ILoginStateListener.ConnectionState.LOGGED_IN);
 		}
 	}
@@ -132,9 +136,11 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 
 	/**
 	 * Fires the new Connection state to all registered listeners.
+	 * 
 	 * @param state
 	 */
-	private void fireConnectionStateChanged(ILoginStateListener.ConnectionState state) {
+	private void fireConnectionStateChanged(
+			ILoginStateListener.ConnectionState state) {
 		for (ILoginStateListener lsl : lsll) {
 			try {
 				lsl.connectionStateChanged(state, null);
@@ -155,8 +161,9 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 		msgreceivers.add(rl);
 	}
 
-	@Override public void registerLoginStateListener(ILoginStateListener loginListener) {
-  	// fixme: not mocked
+	@Override
+	public void registerLoginStateListener(ILoginStateListener loginListener) {
+		// fixme: not mocked
 	}
 
 	public void registerReceiveObjectListener(IObjectReceiveListener rl) {
@@ -167,14 +174,15 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 	/**
 	 * If you send a message to someone, a reply is generated.
 	 */
-	public Boolean sendMessage(UserId to_userid, String content) throws NetworkException,
-																																			TimeoutException, NoSuchUseridException,
-			  OtherUserOfflineException {
+	public Boolean sendMessage(UserId to_userid, String content)
+			throws NetworkException, TimeoutException, NoSuchUseridException,
+			OtherUserOfflineException {
 		UserId userTo;
 		String contentString;
 		UserId to = new MockUserId(to_userid);
-		
-		log.info("Sending message to " + to_userid + " with content \"" + content + "\"");
+
+		log.info("Sending message to " + to_userid + " with content \""
+				+ content + "\"");
 		if (!to.isOfCorrectUseridFormat()) {
 			log.warn("Couldn't send message: Recipient invalid");
 			throw new NoSuchUseridException();
@@ -190,9 +198,9 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 			contentString = content + " to you too";
 		} else {
 			userTo = myuserid;
-			contentString = content;			
+			contentString = content;
 		}
-		
+
 		/* autoreply feature */
 		for (IMessageReceiveListener rl : msgreceivers) {
 			try {
@@ -201,12 +209,13 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 			} catch (Exception ignored) {
 			}
 		}
-		
+
 		return true;
 	}
 
 	/**
 	 * objects sent to other online users are accepted, but ignored.
+	 * 
 	 * @param to
 	 * @param objectidentifier
 	 * @param content
@@ -218,8 +227,8 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 	 * @return
 	 */
 	public Boolean sendObject(UserId to, String objectidentifier, byte[] content)
-			  throws NetworkException, TimeoutException,
-			  NoSuchUseridException, OtherUserOfflineException {
+			throws NetworkException, TimeoutException, NoSuchUseridException,
+			OtherUserOfflineException {
 		if (!new MockUserId(to).isOfCorrectUseridFormat())
 			throw new NoSuchUseridException();
 		if (!loggedinstatus)
@@ -246,7 +255,7 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 
 	@Override
 	public void addUser(UserId user, String name) throws NoSuchUseridException,
-			  NotLoggedInException, IOException {
+			NotLoggedInException, IOException {
 		this.friends.add(user);
 	}
 
@@ -261,25 +270,26 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 	}
 
 	@Override
-	public boolean isCapable(UserId userid) throws IOException, NotLoggedInException,
-			  NoSuchUseridException {
+	public boolean isCapable(UserId userid) throws IOException,
+			NotLoggedInException, NoSuchUseridException {
 		return true;
 	}
 
 	@Override
 	public boolean isFriend(UserId xmppid) throws NotLoggedInException,
-			  NoSuchUseridException {
+			NoSuchUseridException {
 		return this.friends.contains(xmppid);
 	}
 
 	@Override
 	public void removeUser(UserId user) throws NotLoggedInException,
-			  NoSuchUseridException, IOException {
+			NoSuchUseridException, IOException {
 		this.friends.remove(user);
 	}
 
 	@Override
-	public void requestOnlineNotification(UserId userid) throws NotLoggedInException {
+	public void requestOnlineNotification(UserId userid)
+			throws NotLoggedInException {
 		// TODO can't really implement this ...
 	}
 
@@ -298,16 +308,19 @@ public class MockMsgAndStatusService implements IMsgService, IStatusService,
 		lsll.add(lsl);
 	}
 
-	@Override public void removeLoginStateListener(ILoginStateListener lsl) {
+	@Override
+	public void removeLoginStateListener(ILoginStateListener lsl) {
 	}
 
 	@Override
-	public void unRegisterReceiveMessageListener(IMessageReceiveListener receiveListener) {
+	public void unRegisterReceiveMessageListener(
+			IMessageReceiveListener receiveListener) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	@Override public void unRegisterLoginStateListener(ILoginStateListener loginListener) {
+	@Override
+	public void unRegisterLoginStateListener(ILoginStateListener loginListener) {
 		// fixme: not mocked
 	}
 

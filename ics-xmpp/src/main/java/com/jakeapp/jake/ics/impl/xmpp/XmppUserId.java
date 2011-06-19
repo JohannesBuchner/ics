@@ -21,9 +21,10 @@ public class XmppUserId extends UserId {
 	public boolean isOfCorrectUseridFormat() {
 		// TODO: this might not be the full wisdom ...
 
-		return this.userId.contains("@") && this.userId.lastIndexOf("@") == this.userId
-						.lastIndexOf("@") && this.userId.indexOf("@") > 0 && this.userId
-						.indexOf("@") < this.userId.length() - 1;
+		return this.userId.contains("@")
+				&& this.userId.lastIndexOf("@") == this.userId.lastIndexOf("@")
+				&& this.userId.indexOf("@") > 0
+				&& this.userId.indexOf("@") < this.userId.length() - 1;
 	}
 
 	public String getHost() {
@@ -89,8 +90,8 @@ public class XmppUserId extends UserId {
 			return false;
 		if (!(obj instanceof UserId)) {
 			// added string compare magic:
-			return obj.getClass().equals(String.class) && isSameUser(this.userId,
-							(String) obj);
+			return obj.getClass().equals(String.class)
+					&& isSameUser(this.userId, (String) obj);
 		}
 		UserId other = (UserId) obj;
 		if (this.userId == null) {

@@ -170,9 +170,11 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 				|| !content.endsWith(SimpleSocketFileTransferFactory.END))
 			return;
 
-		String inner = content.substring(SimpleSocketFileTransferFactory.START
-				.length(), content.length()
-				- SimpleSocketFileTransferFactory.END.length());
+		String inner = content
+				.substring(
+						SimpleSocketFileTransferFactory.START.length(),
+						content.length()
+								- SimpleSocketFileTransferFactory.END.length());
 
 		log.debug(myUserId + ": receivedMessage : " + from_userid + " : "
 				+ inner);
@@ -192,8 +194,7 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 					from_userid)) {
 				INegotiationSuccessListener nsl = this.listeners.get(r);
 				try {
-					nsl
-							.failed(new OtherUserDoesntHaveRequestedContentException());
+					nsl.failed(new OtherUserDoesntHaveRequestedContentException());
 				} catch (Exception ignored) {
 					log.info("Listener died", ignored);
 				}
@@ -242,9 +243,8 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 					+ "? " + outgoingRequests.contains(fr) + " : " + fr);
 
 			if (!outgoingRequests.contains(fr)) {
-				log
-						.warn(from_userid
-								+ " violated the protocol (sent offer without request)");
+				log.warn(from_userid
+						+ " violated the protocol (sent offer without request)");
 				return;
 			}
 
@@ -298,10 +298,9 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 				}
 			}
 		} catch (IndexOutOfBoundsException e) {
-			log
-					.warn(from_userid
-							+ " packet came not as [GOT_REQUESTED_FILE<uuid><filename>]"
-							+ "ADDRESS_RESPONSE[<address>]");
+			log.warn(from_userid
+					+ " packet came not as [GOT_REQUESTED_FILE<uuid><filename>]"
+					+ "ADDRESS_RESPONSE[<address>]");
 			return;
 		} catch (IllegalArgumentException e) {
 			log.warn(from_userid
@@ -481,8 +480,7 @@ public class SimpleSocketFileTransferMethod implements ITransferMethod,
 			try {
 				while (!SimpleSocketFileTransferMethod.this.server.isClosed()) {
 					Socket client = this.socket.accept();
-					this.log
-							.debug("Incoming connection. Starting another ClientHandler thread.");
+					this.log.debug("Incoming connection. Starting another ClientHandler thread.");
 					new ClientHandler(client, this.listener).run();
 				}
 			} catch (IOException e) {

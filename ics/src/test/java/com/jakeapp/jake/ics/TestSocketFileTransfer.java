@@ -40,9 +40,11 @@ public class TestSocketFileTransfer {
 
 	private String filename = "myfile.txt";
 
-	private FileRequest outrequest = new FileRequest(this.filename, false, this.userid2);
+	private FileRequest outrequest = new FileRequest(this.filename, false,
+			this.userid2);
 
-	private FileRequest inrequest = new FileRequest(this.filename, true, this.userid1);
+	private FileRequest inrequest = new FileRequest(this.filename, true,
+			this.userid1);
 
 	private SimpleFakeMessageExchanger msgX;
 
@@ -81,36 +83,39 @@ public class TestSocketFileTransfer {
 	private IFileTransfer fileTransfer;
 
 	private void createFriendlyPeer(final Tracer t, UserId userid2)
-			  throws NotLoggedInException {
+			throws NotLoggedInException {
 		createPeer(t, userid2, true);
 	}
 
 	private void createMeanPeer(final Tracer t, UserId userid2)
-			  throws NotLoggedInException {
+			throws NotLoggedInException {
 		createPeer(t, userid2, false);
 	}
 
-	private void createPeer(final Tracer t, UserId userid2, final boolean acceptAction)
-			  throws NotLoggedInException {
+	private void createPeer(final Tracer t, UserId userid2,
+			final boolean acceptAction) throws NotLoggedInException {
 		createPeer(t, userid2, acceptAction, true);
 	}
 
 	private void createEmptyPeer(final Tracer t, UserId userid2)
-			  throws NotLoggedInException {
+			throws NotLoggedInException {
 		createPeer(t, userid2, true, false);
 	}
 
-	private void createPeer(final Tracer t, UserId userid2, final boolean acceptAction,
-									final boolean hasTestFile) throws NotLoggedInException {
+	private void createPeer(final Tracer t, UserId userid2,
+			final boolean acceptAction, final boolean hasTestFile)
+			throws NotLoggedInException {
 		log.debug("createFriendlyPeer: creating MsgService");
 		IMsgService msg = msgX.addUser(userid2);
 		msg.registerReceiveMessageListener(new IMessageReceiveListener() {
 
-			private Logger log = Logger.getLogger("Peer:IMessageReceiveListener");
+			private Logger log = Logger
+					.getLogger("Peer:IMessageReceiveListener");
 
 			@Override
 			public void receivedMessage(UserId from_userid, String content) {
-				this.log.info("receivedMessage: " + from_userid + ": " + content);
+				this.log.info("receivedMessage: " + from_userid + ": "
+						+ content);
 				this.log.info("don't care, transfer should handle it");
 			}
 		});
@@ -125,7 +130,8 @@ public class TestSocketFileTransfer {
 
 		tfm.startServing(new IncomingTransferListener() {
 
-			private Logger log = Logger.getLogger("Peer:IncomingTransferListener");
+			private Logger log = Logger
+					.getLogger("Peer:IncomingTransferListener");
 
 			@Override
 			public boolean accept(FileRequest req) {
@@ -156,7 +162,8 @@ public class TestSocketFileTransfer {
 
 		tfm.request(this.outrequest, new INegotiationSuccessListener() {
 
-			private Logger log = Logger.getLogger("Main:INegotiationSuccessListener");
+			private Logger log = Logger
+					.getLogger("Main:INegotiationSuccessListener");
 
 			@Override
 			public void failed(Exception reason) {
@@ -174,10 +181,12 @@ public class TestSocketFileTransfer {
 			}
 		});
 
-		Assert.assertTrue(this.t.awaitStep("clientside negotiation succeeded", 1,
-				  TimeUnit.SECONDS));
+		Assert.assertTrue(this.t.awaitStep("clientside negotiation succeeded",
+				1, TimeUnit.SECONDS));
 
-		TestSocketFileTransfer.log.debug("main: waiting for filetransfer to finish: " + this.fileTransfer);
+		TestSocketFileTransfer.log
+				.debug("main: waiting for filetransfer to finish: "
+						+ this.fileTransfer);
 
 
 		while (!this.fileTransfer.isDone()) {
@@ -188,12 +197,14 @@ public class TestSocketFileTransfer {
 				// best effort, doesn't matter
 			}
 		}
-		Assert.assertTrue(this.t.await("getting content from fs,started on server", 40,
-				  TimeUnit.MILLISECONDS));
+		Assert.assertTrue(this.t.await(
+				"getting content from fs,started on server", 40,
+				TimeUnit.MILLISECONDS));
 		log.debug(this.t.toString());
 		Assert.assertTrue("timeout", this.t.isDone(40, TimeUnit.MILLISECONDS));
 		Assert.assertTrue(testfile.length() > 0);
-		Assert.assertEquals(testfile.length(), this.fileTransfer.getLocalFile().length());
+		Assert.assertEquals(testfile.length(), this.fileTransfer.getLocalFile()
+				.length());
 	}
 
 	@Test
@@ -207,14 +218,15 @@ public class TestSocketFileTransfer {
 
 		tfm.request(this.outrequest, new INegotiationSuccessListener() {
 
-			private Logger log = Logger.getLogger("Main:INegotiationSuccessListener");
+			private Logger log = Logger
+					.getLogger("Main:INegotiationSuccessListener");
 
 			@Override
 			public void failed(Exception reason) {
 				this.log.debug("clientside negotiation failed: " + reason);
 				t.step("clientside negotiation failed");
 				Assert.assertEquals(reason.getClass(),
-						  OtherUserDoesntHaveRequestedContentException.class);
+						OtherUserDoesntHaveRequestedContentException.class);
 			}
 
 			@Override
@@ -226,7 +238,7 @@ public class TestSocketFileTransfer {
 		});
 
 		Assert.assertTrue(this.t.awaitStep("clientside negotiation failed", 1,
-				  TimeUnit.SECONDS));
+				TimeUnit.SECONDS));
 
 		Assert.assertTrue("timeout", this.t.isDone(1000, TimeUnit.MILLISECONDS));
 	}
@@ -242,14 +254,15 @@ public class TestSocketFileTransfer {
 
 		tfm.request(this.outrequest, new INegotiationSuccessListener() {
 
-			private Logger log = Logger.getLogger("Main:INegotiationSuccessListener");
+			private Logger log = Logger
+					.getLogger("Main:INegotiationSuccessListener");
 
 			@Override
 			public void failed(Exception reason) {
 				this.log.debug("clientside negotiation failed: " + reason);
 				t.step("clientside negotiation failed");
 				Assert.assertEquals(reason.getClass(),
-						  OtherUserDoesntHaveRequestedContentException.class);
+						OtherUserDoesntHaveRequestedContentException.class);
 			}
 
 			@Override
@@ -261,7 +274,7 @@ public class TestSocketFileTransfer {
 		});
 
 		Assert.assertTrue(this.t.awaitStep("clientside negotiation failed", 1,
-				  TimeUnit.SECONDS));
+				TimeUnit.SECONDS));
 
 		Assert.assertTrue("timeout", this.t.isDone(1000, TimeUnit.MILLISECONDS));
 	}
@@ -287,7 +300,8 @@ public class TestSocketFileTransfer {
 		int len = (br.read(cbuftmp));
 
 		FileInputStream fisorig = new FileInputStream(this.testfile);
-		BufferedReader brorig = new BufferedReader(new InputStreamReader(fisorig));
+		BufferedReader brorig = new BufferedReader(new InputStreamReader(
+				fisorig));
 		int lenorig = (brorig.read(cbuforig));
 
 		Assert.assertEquals(lenorig, len);
@@ -307,7 +321,8 @@ public class TestSocketFileTransfer {
 		@Override
 		public File getFileForRequest(FileRequest r) {
 			this.log.debug("getFileForRequest(): " + r);
-			Assert.assertEquals(TestSocketFileTransfer.this.filename, r.getFileName());
+			Assert.assertEquals(TestSocketFileTransfer.this.filename,
+					r.getFileName());
 			t.step("getting content from fs");
 			try {
 				return getTestContentFile();

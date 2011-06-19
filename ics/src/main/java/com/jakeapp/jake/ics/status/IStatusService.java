@@ -15,7 +15,7 @@ public interface IStatusService {
 	 *            password
 	 * @param host
 	 * @param port
-	 *            @return whether the login was successful
+	 * @return whether the login was successful
 	 * @throws NetworkException
 	 *             if the network connection is down
 	 * @throws TimeoutException

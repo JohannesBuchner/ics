@@ -38,7 +38,8 @@ import java.util.concurrent.TimeUnit;
 @RunWith(PrerequisiteAwareClassRunner.class)
 public class TestFailoverTransfers {
 
-	private static final Logger log = Logger.getLogger(TestFailoverTransfers.class);
+	private static final Logger log = Logger
+			.getLogger(TestFailoverTransfers.class);
 
 	private static final int SOCKET_TIMEOUT_SECONDS = 5;
 
@@ -46,13 +47,13 @@ public class TestFailoverTransfers {
 
 	private ICService user2;
 
-	private static XmppUserId testUser1 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser1"));
+	private static XmppUserId testUser1 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser1"));
 
 	private static String testUser1Passwd = "testpasswd1";
 
-	private static XmppUserId testUser2 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser2"));
+	private static XmppUserId testUser2 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser2"));
 
 	private static String testUser2Passwd = "testpasswd2";
 
@@ -79,8 +80,8 @@ public class TestFailoverTransfers {
 		XmppTestEnvironment.assureUserIdExists(testUser2, testUser2Passwd);
 
 		this.user1 = new XmppICService(testnamespace, testgroupname);
-		this.user1.getStatusService().login(testUser1,
-						testUser1Passwd, null, 0);
+		this.user1.getStatusService()
+				.login(testUser1, testUser1Passwd, null, 0);
 
 		this.xmppTransfer1 = this.user1.getTransferMethodFactory();
 		Assert.assertNotNull(this.xmppTransfer1);
@@ -88,8 +89,8 @@ public class TestFailoverTransfers {
 		this.failover1 = new FailoverCapableFileTransferService();
 
 		this.user2 = new XmppICService(testnamespace, testgroupname);
-		this.user2.getStatusService().login(testUser2,
-						testUser2Passwd, null, 0);
+		this.user2.getStatusService()
+				.login(testUser2, testUser2Passwd, null, 0);
 		this.xmppTransfer2 = this.user2.getTransferMethodFactory();
 		Assert.assertNotNull(this.xmppTransfer2);
 		Assert.assertTrue(this.user2.getStatusService().isLoggedIn());
@@ -145,13 +146,15 @@ public class TestFailoverTransfers {
 		testReceiveSend(false, false);
 	}
 
-	public void testReceiveSend(boolean enableSockets, boolean enableServerSockets)
-			throws Exception {
+	public void testReceiveSend(boolean enableSockets,
+			boolean enableServerSockets) throws Exception {
 		if (enableSockets)
-			this.failover2.addTransferMethod(new SimpleSocketFileTransferFactory(
-					SOCKET_TIMEOUT_SECONDS), this.user2.getMsgService(), testUser2);
-		this.failover2.addTransferMethod(this.xmppTransfer2, this.user2.getMsgService(),
-				testUser2);
+			this.failover2
+					.addTransferMethod(new SimpleSocketFileTransferFactory(
+							SOCKET_TIMEOUT_SECONDS),
+							this.user2.getMsgService(), testUser2);
+		this.failover2.addTransferMethod(this.xmppTransfer2,
+				this.user2.getMsgService(), testUser2);
 
 		final String filename = "foo.txt";
 		final Tracer t = new Tracer();
@@ -186,8 +189,8 @@ public class TestFailoverTransfers {
 		if (!enableServerSockets || !enableSockets)
 			additionalTime = SOCKET_TIMEOUT_SECONDS * 1000 * 2;
 
-		Assert.assertTrue(t.await("accept, serving started", 3000 + additionalTime,
-				TimeUnit.MILLISECONDS));
+		Assert.assertTrue(t.await("accept, serving started",
+				3000 + additionalTime, TimeUnit.MILLISECONDS));
 		Assert.assertFalse(ftserver.isReceiving());
 		Assert.assertEquals(ftserver.getFileName(), filename);
 		Assert.assertEquals(ftserver.getLocalFile(), file);
@@ -195,7 +198,8 @@ public class TestFailoverTransfers {
 		new Thread(new TransferWatcher(ftserver, new ITransferListener() {
 
 			@Override
-			public void onFailure(AdditionalFileTransferData transfer, String error) {
+			public void onFailure(AdditionalFileTransferData transfer,
+					String error) {
 				t.step("server transmission failed");
 				Assert.fail(error);
 			}
@@ -207,21 +211,21 @@ public class TestFailoverTransfers {
 			}
 
 			@Override
-			public void onUpdate(AdditionalFileTransferData transfer, Status status,
-					double progress) {
+			public void onUpdate(AdditionalFileTransferData transfer,
+					Status status, double progress) {
 				log.info("update: " + status + " - " + progress);
 			}
 
 		})).start();
 
 		Assert.assertTrue(t.await("mapper", 1000, TimeUnit.MILLISECONDS));
-		Assert.assertTrue(t.await("negotiation succeeded", 2000 + additionalTime,
-				TimeUnit.MILLISECONDS));
+		Assert.assertTrue(t.await("negotiation succeeded",
+				2000 + additionalTime, TimeUnit.MILLISECONDS));
 		while (!ftclient.isDone() || !ftserver.isDone()) {
-			log.debug("server filetransfer status: " + ftserver.getStatus() + " - "
-					+ ftserver.getProgress());
-			log.debug("client filetransfer status: " + ftclient.getStatus() + " - "
-					+ ftserver.getProgress());
+			log.debug("server filetransfer status: " + ftserver.getStatus()
+					+ " - " + ftserver.getProgress());
+			log.debug("client filetransfer status: " + ftclient.getStatus()
+					+ " - " + ftserver.getProgress());
 			Thread.sleep(100);
 		}
 		Assert.assertEquals(file.length(), ftserver.getAmountWritten());
@@ -229,18 +233,20 @@ public class TestFailoverTransfers {
 
 		Assert.assertEquals(file.length(), ftserver.getLocalFile().length());
 		Assert.assertEquals(file.length(), ftclient.getLocalFile().length());
-		Assert.assertEquals(content.trim(), getFileContent(ftclient.getLocalFile())
-				.trim());
+		Assert.assertEquals(content.trim(),
+				getFileContent(ftclient.getLocalFile()).trim());
 	}
 
-	private void setupServer(final String filename, final Tracer t, final File file,
-			boolean enableSockets) throws NotLoggedInException {
+	private void setupServer(final String filename, final Tracer t,
+			final File file, boolean enableSockets) throws NotLoggedInException {
 
 		if (enableSockets)
-			this.failover1.addTransferMethod(new SimpleSocketFileTransferFactory(
-					SOCKET_TIMEOUT_SECONDS), this.user1.getMsgService(), testUser1);
-		this.failover1.addTransferMethod(xmppTransfer1, this.user1.getMsgService(),
-				testUser1);
+			this.failover1
+					.addTransferMethod(new SimpleSocketFileTransferFactory(
+							SOCKET_TIMEOUT_SECONDS),
+							this.user1.getMsgService(), testUser1);
+		this.failover1.addTransferMethod(xmppTransfer1,
+				this.user1.getMsgService(), testUser1);
 		failover1.startServing(new IncomingTransferListener() {
 
 			@Override

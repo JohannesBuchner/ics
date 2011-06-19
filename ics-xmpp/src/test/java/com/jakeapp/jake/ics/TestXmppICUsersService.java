@@ -33,13 +33,13 @@ public class TestXmppICUsersService {
 
 	private ICService ics2;
 
-	private static XmppUserId testUser1 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser1"));
+	private static XmppUserId testUser1 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser1"));
 
 	private static String testUser1Passwd = "testpasswd1";
 
-	private static XmppUserId testUser2 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser2"));
+	private static XmppUserId testUser2 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser2"));
 
 	private static String testUser2Passwd = "testpasswd2";
 
@@ -54,8 +54,7 @@ public class TestXmppICUsersService {
 		XmppTestEnvironment.assureUserIdExists(testUser2, testUser2Passwd);
 
 		this.ics = new XmppICService(testnamespace, testgroupname);
-		this.ics.getStatusService().login(testUser1,
-				testUser1Passwd, null, 0);
+		this.ics.getStatusService().login(testUser1, testUser1Passwd, null, 0);
 	}
 
 	@After
@@ -77,9 +76,11 @@ public class TestXmppICUsersService {
 			log.debug("have " + u);
 		}
 		for (UserId anExpected : expected) {
-			log.debug("want " + new XmppUserId(anExpected).getUserIdWithOutResource());
-			Assert.assertTrue("User " + anExpected + " expected",
-							ul.remove(new XmppUserId(anExpected).getUserIdWithOutResource()));
+			log.debug("want "
+					+ new XmppUserId(anExpected).getUserIdWithOutResource());
+			Assert.assertTrue("User " + anExpected + " expected", ul
+					.remove(new XmppUserId(anExpected)
+							.getUserIdWithOutResource()));
 		}
 		Assert.assertEquals("no remaining users: "
 				+ (ul.size() > 0 ? "especially not you, " + ul.get(0) : ""), 0,
@@ -116,8 +117,7 @@ public class TestXmppICUsersService {
 					}
 				});
 		this.ics2 = new XmppICService(testnamespace, testgroupname);
-		this.ics2.getStatusService().login(testUser2,
-				testUser2Passwd, null, 0);
+		this.ics2.getStatusService().login(testUser2, testUser2Passwd, null, 0);
 		this.ics.getUsersService().requestOnlineNotification(testUser2);
 		Assert.assertTrue(s.tryAcquire(5, TimeUnit.SECONDS));
 	}
@@ -135,7 +135,7 @@ public class TestXmppICUsersService {
 	public void testGetUserList_ContainsOtherUser() throws Exception {
 
 		this.ics.getUsersService().addUser(testUser2, "other");
-		
+
 		UserId[] expected = { testUser2 };
 		assertContainsExactlyUsers(this.ics.getUsersService().getUsers(),
 				expected);

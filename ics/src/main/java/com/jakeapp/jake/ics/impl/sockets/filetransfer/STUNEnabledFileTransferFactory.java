@@ -41,7 +41,8 @@ public class STUNEnabledFileTransferFactory implements ITransferMethodFactory {
 	}
 
 	@Override
-	public ITransferMethod getTransferMethod(IMsgService negotiationService, UserId user) {
+	public ITransferMethod getTransferMethod(IMsgService negotiationService,
+			UserId user) {
 		return new SocketFileTransfer(negotiationService, user);
 	}
 
@@ -92,42 +93,28 @@ public class STUNEnabledFileTransferFactory implements ITransferMethodFactory {
 		private String handlePacket(UserId from_userid, String[] fields) {
 			if (fields.length == 0)
 				return null;
-			/*if (fields[0].equals(NegotiationState.request)
-					&& fields.length == 3) {
-				String type = fields[1];
-				String filename = fields[2];
-				String response = START + NegotiationState.serverips;
-				for (InetSocketAddress ip : provideAddresses()) {
-					response += "|" + ip.toString();
-				}
-				response += END;
-				return response;
-			} else if (fields[0].equals(NegotiationState.serverips)
-					&& fields.length > 1) {
-				try {
-					InetSocketAddress other = new InetSocketAddress(fields[1]);
-					String response = START + NegotiationState.clientips;
-					// TODO: improvable (multiple addresses, STUN, etc)
-					response += END;
-					return response;
-				} catch (UnknownHostException e) {
-					log.error("unpacking ip failed", e);
-					return null;
-				} catch (NumberFormatException e) {
-					log.error("unpacking port failed", e);
-					return null;
-				}
-			} else if (fields[0].equals(NegotiationState.clientips)) {
-				// TODO: improvable (ie: care)
-				String response = START + NegotiationState.serverresults;
-				response += END;
-				return response;
-			} else if (fields[0].equals(NegotiationState.serverresults)) {
-				// TODO: improvable (ie: care)
-				String response = START + NegotiationState.clientdecision;
-				response += END;
-				return response;
-			}*/
+			/*
+			 * if (fields[0].equals(NegotiationState.request) && fields.length
+			 * == 3) { String type = fields[1]; String filename = fields[2];
+			 * String response = START + NegotiationState.serverips; for
+			 * (InetSocketAddress ip : provideAddresses()) { response += "|" +
+			 * ip.toString(); } response += END; return response; } else if
+			 * (fields[0].equals(NegotiationState.serverips) && fields.length >
+			 * 1) { try { InetSocketAddress other = new
+			 * InetSocketAddress(fields[1]); String response = START +
+			 * NegotiationState.clientips; // TODO: improvable (multiple
+			 * addresses, STUN, etc) response += END; return response; } catch
+			 * (UnknownHostException e) { log.error("unpacking ip failed", e);
+			 * return null; } catch (NumberFormatException e) {
+			 * log.error("unpacking port failed", e); return null; } } else if
+			 * (fields[0].equals(NegotiationState.clientips)) { // TODO:
+			 * improvable (ie: care) String response = START +
+			 * NegotiationState.serverresults; response += END; return response;
+			 * } else if (fields[0].equals(NegotiationState.serverresults)) { //
+			 * TODO: improvable (ie: care) String response = START +
+			 * NegotiationState.clientdecision; response += END; return
+			 * response; }
+			 */
 			return null;
 		}
 
@@ -153,7 +140,7 @@ public class STUNEnabledFileTransferFactory implements ITransferMethodFactory {
 		@Override
 		public void stopServing() {
 			// TODO Auto-generated method stub
-			
+
 		}
 
 	}

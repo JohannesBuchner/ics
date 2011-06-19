@@ -24,7 +24,8 @@ abstract public class UserId {
 			return false;
 		if (getClass() != obj.getClass()) {
 			// added string compare magic:
-			return obj.getClass().equals(String.class) && this.userId.equals(obj);
+			return obj.getClass().equals(String.class)
+					&& this.userId.equals(obj);
 		}
 		UserId other = (UserId) obj;
 		if (userId == null) {

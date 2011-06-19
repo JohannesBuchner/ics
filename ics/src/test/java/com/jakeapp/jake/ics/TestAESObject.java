@@ -19,7 +19,7 @@ import com.jakeapp.jake.ics.impl.sockets.filetransfer.AESObject;
 public class TestAESObject {
 
 	private static Logger log = Logger.getLogger(TestAESObject.class);
-	
+
 	private AESObject aes;
 
 	private String msg = new String("foo bar my secret message is so secret");
@@ -40,8 +40,8 @@ public class TestAESObject {
 
 		log.debug("key: " + key);
 
-		String recvmsg = otherSide(key, new ByteArrayInputStream(os
-				.toByteArray()));
+		String recvmsg = otherSide(key,
+				new ByteArrayInputStream(os.toByteArray()));
 		Assert.assertEquals("encryption left msg unchanged", msg, recvmsg);
 
 	}

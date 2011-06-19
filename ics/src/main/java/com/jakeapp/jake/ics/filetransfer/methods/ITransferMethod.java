@@ -16,7 +16,8 @@ public interface ITransferMethod {
 
 	// TODO: refactor in extra class?
 	public final String FILE_REQUEST = "<filerequest/>";
-  public final String FILE_RESPONSE_DONT_HAVE = "<fileresponseno/>";
+
+	public final String FILE_RESPONSE_DONT_HAVE = "<fileresponseno/>";
 
 	/**
 	 * Start the server so others may request files
@@ -30,6 +31,7 @@ public interface ITransferMethod {
 
 	/**
 	 * We want to request a file, i.e. start the negotiation
+	 * 
 	 * @param request
 	 * @param nsl
 	 */

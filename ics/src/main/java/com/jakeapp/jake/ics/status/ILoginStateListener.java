@@ -15,8 +15,10 @@ public interface ILoginStateListener {
 	/**
 	 * Fired when the connection state changes.
 	 * 
-	 * @param le new connection state
-	 * @param ex Reason why the state changed. May be null.
+	 * @param le
+	 *            new connection state
+	 * @param ex
+	 *            Reason why the state changed. May be null.
 	 */
 	public void connectionStateChanged(ConnectionState le, Exception ex);
 }

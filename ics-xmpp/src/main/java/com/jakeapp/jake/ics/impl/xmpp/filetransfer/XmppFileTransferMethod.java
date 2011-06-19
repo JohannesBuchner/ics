@@ -41,13 +41,14 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author johannes
  * 
  */
-public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveListener,
-				ILoginStateListener, IOutgoingRequestManager {
+public class XmppFileTransferMethod implements ITransferMethod,
+		IMessageReceiveListener, ILoginStateListener, IOutgoingRequestManager {
+
 	private static Logger log = Logger.getLogger(XmppFileTransferMethod.class);
 
 	/**
-	 * How long we wait for a response from a server after we have sent
-	 * a request to this server, in milliseconds
+	 * How long we wait for a response from a server after we have sent a
+	 * request to this server, in milliseconds
 	 */
 	private static final long REQUEST_TIMEOUT = 6000;
 
@@ -56,7 +57,7 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 	private Map<FileRequest, INegotiationSuccessListener> listeners = new HashMap<FileRequest, INegotiationSuccessListener>();
 
 	private Queue<FileRequest> outgoingRequests = new LinkedBlockingQueue<FileRequest>();
-	
+
 	private Map<FileRequest, TimerTask> outgoingRequestTimeoutTasks = new HashMap<FileRequest, TimerTask>();
 
 	private Timer timeoutTimer;
@@ -69,8 +70,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 
 	private XmppConnectionData con;
 
-	public XmppFileTransferMethod(XmppConnectionData con, IMsgService negotiationService,
-			UserId user) {
+	public XmppFileTransferMethod(XmppConnectionData con,
+			IMsgService negotiationService, UserId user) {
 		log.debug("creating XmppFileTransferMethod for user " + user);
 		this.myUserId = user;
 		this.con = con;
@@ -80,7 +81,7 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 		this.setTimeoutTimer(new Timer());
 		startReceiving();
 	}
-	
+
 	private void setTimeoutTimer(Timer timeoutTimer) {
 		this.timeoutTimer = timeoutTimer;
 	}
@@ -95,17 +96,18 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 	@Override
 	public void request(FileRequest r, INegotiationSuccessListener nsl) {
 		TimerTask timeoutTask;
-		
+
 		log.debug(myUserId + ": We request " + r);
-		String request = XmppFileTransferFactory.START + FILE_REQUEST + r.getFileName()
-				+ XmppFileTransferFactory.END;
+		String request = XmppFileTransferFactory.START + FILE_REQUEST
+				+ r.getFileName() + XmppFileTransferFactory.END;
 
 		this.listeners.put(r, nsl);
 		this.outgoingRequests.add(r);
-		//add timer and schedule it for execution
-		timeoutTask = new TimeoutTask(this,nsl,r);
+		// add timer and schedule it for execution
+		timeoutTask = new TimeoutTask(this, nsl, r);
 		this.outgoingRequestTimeoutTasks.put(r, timeoutTask);
-		this.getTimeoutTimer().schedule(timeoutTask, XmppFileTransferMethod.REQUEST_TIMEOUT);
+		this.getTimeoutTimer().schedule(timeoutTask,
+				XmppFileTransferMethod.REQUEST_TIMEOUT);
 
 		log.debug("requests I have to " + r.getPeer() + " : "
 				+ this.outgoingRequests.size() + " : " + this.outgoingRequests);
@@ -130,25 +132,28 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 			if (!content.startsWith(XmppFileTransferFactory.START)
 					|| !content.endsWith(XmppFileTransferFactory.END))
 				return;
-	
-			String inner = content.substring(XmppFileTransferFactory.START.length(), content
-					.length()
-					- XmppFileTransferFactory.END.length());
-	
-			log.debug(myUserId + ": receivedMessage : " + from_userid + " : " + inner);
-	
+
+			String inner = content.substring(
+					XmppFileTransferFactory.START.length(), content.length()
+							- XmppFileTransferFactory.END.length());
+
+			log.debug(myUserId + ": receivedMessage : " + from_userid + " : "
+					+ inner);
+
 			if (inner.startsWith(FILE_REQUEST)) {
 				handleFileRequest(from_userid, inner);
 				/*
 				 * ADDRESS_RESPONSE:
-				 * [GOT_REQUESTED_FILE<uuid><filename>]ADDRESS_RESPONSE[<address>]
+				 * [GOT_REQUESTED_FILE<uuid><filename>]ADDRESS_RESPONSE
+				 * [<address>]
 				 */
 			} else if (inner.equals(FILE_RESPONSE_DONT_HAVE)) {
 				/*
 				 * third step, client receives no ok from server
 				 */
 				// we are the client, server doesn't have it
-				for (FileRequest r : getRequestsForUser(outgoingRequests, from_userid)) {
+				for (FileRequest r : getRequestsForUser(outgoingRequests,
+						from_userid)) {
 					INegotiationSuccessListener nsl = this.listeners.get(r);
 					try {
 						nsl.failed(new OtherUserDoesntHaveRequestedContentException());
@@ -159,7 +164,7 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 			} else {
 				log.warn("unknown request from " + from_userid + ": " + content);
 			}
-		}catch(Exception e) {
+		} catch (Exception e) {
 			log.error("error handling request " + content, e);
 		}
 	}
@@ -173,7 +178,7 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 		FileRequest fr = new FileRequest(filename, true, from_userid);
 
 		log.debug(this.myUserId.getUserId() + " : " + from_userid + " wants  "
-						+ filename);
+				+ filename);
 		String response = XmppFileTransferFactory.START;
 		boolean success = true;
 		if (!isServing()) {
@@ -195,8 +200,9 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 					if (from_userid.getResource().length() == 0)
 						success = false;
 					else {
-						IFileTransfer ft = sendFile(localFile, from_userid
-								.getUserIdWithResource(), filename, fr);
+						IFileTransfer ft = sendFile(localFile,
+								from_userid.getUserIdWithResource(), filename,
+								fr);
 						incomingTransferListener.started(ft);
 					}
 				}
@@ -215,10 +221,13 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 		}
 	}
 
-	public IFileTransfer sendFile(File f, String to, String filename, FileRequest request) {
-		log.debug(this.myUserId + " : Sending file " + f.getAbsolutePath() + " to " + to);
+	public IFileTransfer sendFile(File f, String to, String filename,
+			FileRequest request) {
+		log.debug(this.myUserId + " : Sending file " + f.getAbsolutePath()
+				+ " to " + to);
 		// Create the file transfer manager
-		FileTransferManager manager = new FileTransferManager(this.con.getConnection());
+		FileTransferManager manager = new FileTransferManager(
+				this.con.getConnection());
 
 		// Create the outgoing file transfer
 		OutgoingFileTransfer ft = manager.createOutgoingFileTransfer(to);
@@ -240,7 +249,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 	 * public LocalFile(File f) { this.setDataFile(f); } }
 	 */
 
-	private List<FileRequest> getRequestsForUser(Queue<FileRequest> frq, XmppUserId userid) {
+	private List<FileRequest> getRequestsForUser(Queue<FileRequest> frq,
+			XmppUserId userid) {
 		List<FileRequest> rq = new LinkedList<FileRequest>();
 		for (FileRequest r : frq) {
 			log.debug(r.getPeer() + " - " + r.getFileName());
@@ -253,7 +263,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 
 	@Override
 	public void removeOutgoing(FileRequest r) {
-		log.debug("I'm done with outgoing request " + r + " (one way or the other)");
+		log.debug("I'm done with outgoing request " + r
+				+ " (one way or the other)");
 		TimerTask task = this.outgoingRequestTimeoutTasks.remove(r);
 		if (task != null)
 			task.cancel();
@@ -266,8 +277,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 	}
 
 	@Override
-	public void startServing(IncomingTransferListener l, FileRequestFileMapper mapper)
-			throws NotLoggedInException {
+	public void startServing(IncomingTransferListener l,
+			FileRequestFileMapper mapper) throws NotLoggedInException {
 		log.debug(this.myUserId + ": starting to serve");
 		this.incomingTransferListener = l;
 		this.mapper = mapper;
@@ -288,12 +299,12 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 			log.debug(myUserId + ": not logged in");
 			return;
 		}
-		
+
 		/*
-		 * The connection may have been closed or may not be open yet.
-		 * In this case, adding a FileTransferListener would cause an evil
-		 * exception. To prevent this, we must make sure, that there is a running
-		 * connection to the server.
+		 * The connection may have been closed or may not be open yet. In this
+		 * case, adding a FileTransferListener would cause an evil exception. To
+		 * prevent this, we must make sure, that there is a running connection
+		 * to the server.
 		 */
 		if (!this.con.getConnection().isConnected())
 			try {
@@ -302,22 +313,24 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 			} catch (XMPPException e1) {
 				log.warn(e1);
 			}
-		
+
 		// Create the file transfer manager
-		final FileTransferManager manager = new FileTransferManager(this.con.getConnection());
+		final FileTransferManager manager = new FileTransferManager(
+				this.con.getConnection());
 
 		log.debug(myUserId + ": adding receiver hook");
 		// Create the listener
 		manager.addFileTransferListener(new FileTransferListener() {
 
 			// incoming transfer
-			synchronized public void fileTransferRequest(FileTransferRequest request) {
+			synchronized public void fileTransferRequest(
+					FileTransferRequest request) {
 				// Check to see if the request should be accepted
 				log.debug(XmppFileTransferMethod.this.myUserId
-						+ "incoming fileTransfer: " + request.getDescription() + " from "
-						+ request.getRequestor());
-				for (FileRequest r : getRequestsForUser(outgoingRequests, new XmppUserId(
-						request.getRequestor()))) {
+						+ "incoming fileTransfer: " + request.getDescription()
+						+ " from " + request.getRequestor());
+				for (FileRequest r : getRequestsForUser(outgoingRequests,
+						new XmppUserId(request.getRequestor()))) {
 					if (r.getFileName().equals(request.getDescription())) {
 						// Accept it
 						INegotiationSuccessListener nsl = XmppFileTransferMethod.this.listeners
@@ -326,7 +339,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 
 						File tempFile;
 						try {
-							tempFile = File.createTempFile("recvFile", r.getFileName());
+							tempFile = File.createTempFile("recvFile",
+									r.getFileName());
 						} catch (IOException e) {
 							log.debug(e);
 							log.error("creating temporary file failed.");
@@ -334,7 +348,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 						}
 						try {
 							transfer.recieveFile(tempFile);
-							IFileTransfer ft = new XmppFileTransfer(transfer, r, tempFile);
+							IFileTransfer ft = new XmppFileTransfer(transfer,
+									r, tempFile);
 							try {
 								nsl.succeeded(ft);
 							} catch (Exception ignored) {
@@ -342,7 +357,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 							}
 						} catch (XMPPException e) {
 							try {
-								nsl.failed(new CommunicationProblemException(e.getCause()));
+								nsl.failed(new CommunicationProblemException(e
+										.getCause()));
 							} catch (Exception ignored) {
 							}
 						}
@@ -351,7 +367,8 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 				}
 
 				log.info("ignoring incoming transfer (no request): "
-						+ request.getRequestor() + " - " + request.getFileName());
+						+ request.getRequestor() + " - "
+						+ request.getFileName());
 				// Do not reject it, it might be for some other
 				// ressource (e.g. the normal chat client).
 			}
@@ -361,7 +378,7 @@ public class XmppFileTransferMethod implements ITransferMethod, IMessageReceiveL
 
 	@Override
 	public void connectionStateChanged(ConnectionState le, Exception ex) {
-		if(ConnectionState.LOGGED_IN == le) {
+		if (ConnectionState.LOGGED_IN == le) {
 			this.startReceiving();
 		}
 	}

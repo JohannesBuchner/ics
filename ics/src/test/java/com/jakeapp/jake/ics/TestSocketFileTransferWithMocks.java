@@ -32,9 +32,11 @@ import com.jakeapp.jake.ics.impl.sockets.filetransfer.AESObject;
 import com.jakeapp.jake.ics.impl.sockets.filetransfer.SimpleSocketFileTransfer;
 
 public class TestSocketFileTransferWithMocks {
+
 	private static final int SERVER_PORT = 0;
 
-	private static final Logger log = Logger.getLogger(TestSocketFileTransferWithMocks.class);
+	private static final Logger log = Logger
+			.getLogger(TestSocketFileTransferWithMocks.class);
 
 	private String filename = "myfile.txt";
 
@@ -66,15 +68,17 @@ public class TestSocketFileTransferWithMocks {
 
 	@Test
 	public void testClient() throws Exception {
-		FileRequest fr = new FileRequest("myfile.txt", true, new MockUserId("otherpeer"));
+		FileRequest fr = new FileRequest("myfile.txt", true, new MockUserId(
+				"otherpeer"));
 		UUID key = UUID.randomUUID();
 		InetSocketAddress server = prepareServer(key);
 		AESObject aes = new MockAESObject();
-		SimpleSocketFileTransfer client = new SimpleSocketFileTransfer(fr, server, key, 10, aes);
+		SimpleSocketFileTransfer client = new SimpleSocketFileTransfer(fr,
+				server, key, 10, aes);
 		new Thread(client).start();
 		while (!client.isDone()) {
-			log.debug("client filetransfer status: " + client.getStatus() + " - "
-					+ client.getProgress());
+			log.debug("client filetransfer status: " + client.getStatus()
+					+ " - " + client.getProgress());
 			Thread.sleep(1000);
 		}
 		Assert.assertFalse(client.getStatus() == Status.error);
@@ -114,13 +118,16 @@ public class TestSocketFileTransferWithMocks {
 				log.debug("got a client");
 				char[] incontent = new char[1000];
 				InputStream input = client.getInputStream();
-				BufferedReader br = new BufferedReader(new InputStreamReader(input));
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						input));
 				int inlen = br.read(incontent);
 				log.debug("got " + inlen + " bytes: " + new String(incontent));
 				log.debug("should be: " + key);
-				Assert.assertEquals(new String(incontent).trim(), key.toString());
+				Assert.assertEquals(new String(incontent).trim(),
+						key.toString());
 				OutputStream output = client.getOutputStream();
-				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(output));
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+						output));
 				log.debug("writing content ...");
 				bw.write(content);
 				log.debug("writing content ... done");
@@ -138,7 +145,7 @@ public class TestSocketFileTransferWithMocks {
 	public void justRunServer() throws Exception {
 		new FileRequest("myfile.txt", true, new MockUserId("otherpeer"));
 		UUID key = UUID.randomUUID();
-		
+
 		InetSocketAddress server = prepareServer(key);
 		log.debug("server ready at: " + server);
 		log.debug("send " + key);

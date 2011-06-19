@@ -11,9 +11,10 @@ import org.jivesoftware.smack.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
-public class IncomingGenericPacketListener implements PacketListener, PacketFilter {
-	List<IMessageReceiveListener> listeners =
-					new LinkedList<IMessageReceiveListener>();
+public class IncomingGenericPacketListener implements PacketListener,
+		PacketFilter {
+
+	List<IMessageReceiveListener> listeners = new LinkedList<IMessageReceiveListener>();
 
 	public boolean add(IMessageReceiveListener e) {
 		log.debug("adding IMessageReceiveListener to IncomingGenericPacketListener");
@@ -29,8 +30,8 @@ public class IncomingGenericPacketListener implements PacketListener, PacketFilt
 		return listeners.remove(e);
 	}
 
-	private static final Logger log =
-					Logger.getLogger(IncomingGenericPacketListener.class);
+	private static final Logger log = Logger
+			.getLogger(IncomingGenericPacketListener.class);
 
 	private String namespace;
 
@@ -40,8 +41,8 @@ public class IncomingGenericPacketListener implements PacketListener, PacketFilt
 	}
 
 	public void processPacket(Packet packet) {
-		GenericPacketExtension fre =
-						(GenericPacketExtension) packet.getExtension(this.namespace);
+		GenericPacketExtension fre = (GenericPacketExtension) packet
+				.getExtension(this.namespace);
 
 		log.info("incoming (generic) packet from " + packet.getFrom());
 
@@ -50,8 +51,8 @@ public class IncomingGenericPacketListener implements PacketListener, PacketFilt
 	}
 
 	public boolean accept(Packet packet) {
-		GenericPacketExtension fre =
-						(GenericPacketExtension) packet.getExtension(this.namespace);
+		GenericPacketExtension fre = (GenericPacketExtension) packet
+				.getExtension(this.namespace);
 		return fre != null;
 	}
 
@@ -60,10 +61,9 @@ public class IncomingGenericPacketListener implements PacketListener, PacketFilt
 		for (IMessageReceiveListener imrl : listeners) {
 			try {
 				imrl.receivedMessage(xmppUserId, content);
-			}
-			catch (Exception ignored) {
+			} catch (Exception ignored) {
 				ignored.printStackTrace();
-				//empty implementation
+				// empty implementation
 			}
 		}
 	}

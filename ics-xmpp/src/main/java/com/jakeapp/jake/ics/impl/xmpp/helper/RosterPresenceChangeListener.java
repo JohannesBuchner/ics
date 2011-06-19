@@ -9,8 +9,7 @@ import org.jivesoftware.smack.RosterListener;
  * 
  * @author johannes
  */
-public abstract class RosterPresenceChangeListener implements
-		RosterListener {
+public abstract class RosterPresenceChangeListener implements RosterListener {
 
 	public void entriesAdded(
 			@SuppressWarnings("unused") Collection<String> addresses) {

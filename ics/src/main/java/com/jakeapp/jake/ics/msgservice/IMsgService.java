@@ -60,7 +60,8 @@ public interface IMsgService {
 	 * @param receiveListener
 	 *            object to be called
 	 */
-	public void registerReceiveMessageListener(IMessageReceiveListener receiveListener);
+	public void registerReceiveMessageListener(
+			IMessageReceiveListener receiveListener);
 
 
 	public void registerLoginStateListener(ILoginStateListener loginListener);
@@ -68,16 +69,19 @@ public interface IMsgService {
 	/**
 	 * get a MsgService that can only send and receive from the UserIds in
 	 * {@link IUsersService}
+	 * 
 	 * @return
 	 */
 	public IMsgService getFriendMsgService();
 
 	/**
 	 * Unregisteres a previously registered callback.
+	 * 
 	 * @param receiveListener
-	 * 	previously registered callback.
+	 *            previously registered callback.
 	 */
-	public void unRegisterReceiveMessageListener(IMessageReceiveListener receiveListener);
+	public void unRegisterReceiveMessageListener(
+			IMessageReceiveListener receiveListener);
 
 
 	public void unRegisterLoginStateListener(ILoginStateListener loginListener);

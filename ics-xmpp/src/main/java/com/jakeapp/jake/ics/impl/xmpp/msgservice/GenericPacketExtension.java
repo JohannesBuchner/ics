@@ -1,4 +1,5 @@
 package com.jakeapp.jake.ics.impl.xmpp.msgservice;
+
 import org.jivesoftware.smack.packet.PacketExtension;
 
 
@@ -18,7 +19,7 @@ public class GenericPacketExtension implements PacketExtension {
 	 * content of interest
 	 */
 	private String content;
-	
+
 	public GenericPacketExtension(String namespace) {
 		this.namespace = namespace;
 	}

@@ -47,13 +47,13 @@ public class TestFiletransfers {
 
 	private ITransferMethod transfers2;
 
-	private static XmppUserId testUser1 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser1"));
+	private static XmppUserId testUser1 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser1"));
 
 	private static String testUser1Passwd = "testpasswd1";
 
-	private static XmppUserId testUser2 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser2"));
+	private static XmppUserId testUser2 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser2"));
 
 	private static String testUser2Passwd = "testpasswd2";
 
@@ -72,21 +72,23 @@ public class TestFiletransfers {
 		XmppTestEnvironment.assureUserIdExists(testUser2, testUser2Passwd);
 
 		this.user1 = new XmppICService(testnamespace, testgroupname);
-		this.user1.getStatusService().login(testUser1,
-						testUser1Passwd, null, 0);
+		this.user1.getStatusService()
+				.login(testUser1, testUser1Passwd, null, 0);
 
 		ITransferMethodFactory t1 = this.user1.getTransferMethodFactory();
 		Assert.assertNotNull(t1);
 		Assert.assertTrue(this.user1.getStatusService().isLoggedIn());
-		this.transfers1 = t1.getTransferMethod(this.user1.getMsgService(), testUser1);
+		this.transfers1 = t1.getTransferMethod(this.user1.getMsgService(),
+				testUser1);
 
 		this.user2 = new XmppICService(testnamespace, testgroupname);
-		this.user2.getStatusService().login(testUser2,
-						testUser2Passwd, null, 0);
+		this.user2.getStatusService()
+				.login(testUser2, testUser2Passwd, null, 0);
 		ITransferMethodFactory t2 = this.user2.getTransferMethodFactory();
 		Assert.assertNotNull(t2);
 		Assert.assertTrue(this.user2.getStatusService().isLoggedIn());
-		this.transfers2 = t2.getTransferMethod(this.user2.getMsgService(), testUser2);
+		this.transfers2 = t2.getTransferMethod(this.user2.getMsgService(),
+				testUser2);
 
 		Assert.assertTrue(this.user2.getStatusService().isLoggedIn());
 		Assert.assertTrue(this.user1.getStatusService().isLoggedIn());
@@ -137,9 +139,8 @@ public class TestFiletransfers {
 		Assert.assertTrue(this.user1.getStatusService().isLoggedIn());
 		Assert.assertTrue(this.user2.getStatusService().isLoggedIn());
 
-		Assert
-				.assertTrue(t.await("accept, serving started", 3000,
-						TimeUnit.MILLISECONDS));
+		Assert.assertTrue(t.await("accept, serving started", 3000,
+				TimeUnit.MILLISECONDS));
 		Assert.assertFalse(ftserver.isReceiving());
 		Assert.assertEquals(ftserver.getFileName(), filename);
 		Assert.assertEquals(ftserver.getLocalFile(), file);
@@ -147,7 +148,8 @@ public class TestFiletransfers {
 		new Thread(new TransferWatcher(ftserver, new ITransferListener() {
 
 			@Override
-			public void onFailure(AdditionalFileTransferData transfer, String error) {
+			public void onFailure(AdditionalFileTransferData transfer,
+					String error) {
 				t.step("server transmission failed");
 				Assert.fail(error);
 			}
@@ -159,20 +161,21 @@ public class TestFiletransfers {
 			}
 
 			@Override
-			public void onUpdate(AdditionalFileTransferData transfer, Status status,
-					double progress) {
+			public void onUpdate(AdditionalFileTransferData transfer,
+					Status status, double progress) {
 				log.info("update: " + status + " - " + progress);
 			}
 
 		})).start();
 
 		Assert.assertTrue(t.await("mapper", 1000, TimeUnit.MILLISECONDS));
-		Assert.assertTrue(t.await("negotiation succeeded", 1000, TimeUnit.MILLISECONDS));
+		Assert.assertTrue(t.await("negotiation succeeded", 1000,
+				TimeUnit.MILLISECONDS));
 		while (!ftclient.isDone() || !ftserver.isDone()) {
-			log.debug("server filetransfer status: " + ftserver.getStatus() + " - "
-					+ ftserver.getProgress());
-			log.debug("client filetransfer status: " + ftclient.getStatus() + " - "
-					+ ftserver.getProgress());
+			log.debug("server filetransfer status: " + ftserver.getStatus()
+					+ " - " + ftserver.getProgress());
+			log.debug("client filetransfer status: " + ftclient.getStatus()
+					+ " - " + ftserver.getProgress());
 			Thread.sleep(100);
 		}
 		Assert.assertEquals(ftserver.getAmountWritten(), file.length());
@@ -180,12 +183,12 @@ public class TestFiletransfers {
 
 		Assert.assertEquals(file.length(), ftserver.getLocalFile().length());
 		Assert.assertEquals(file.length(), ftclient.getLocalFile().length());
-		Assert.assertEquals(content.trim(), getFileContent(ftclient.getLocalFile())
-				.trim());
+		Assert.assertEquals(content.trim(),
+				getFileContent(ftclient.getLocalFile()).trim());
 	}
 
-	private void setupServer(final String filename, final Tracer t, final File file)
-			throws NotLoggedInException {
+	private void setupServer(final String filename, final Tracer t,
+			final File file) throws NotLoggedInException {
 		transfers1.startServing(new IncomingTransferListener() {
 
 			@Override

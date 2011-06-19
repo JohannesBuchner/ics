@@ -67,9 +67,8 @@ public class XmppTestEnvironment implements Checker {
 		try {
 			connection.login(username, password);
 		} catch (XMPPException e) {
-			log
-					.debug("login failed, user probably doesn't exist, creating the user now. ["
-							+ e.getMessage() + "]");
+			log.debug("login failed, user probably doesn't exist, creating the user now. ["
+					+ e.getMessage() + "]");
 			Assert.assertTrue(connection.getAccountManager()
 					.supportsAccountCreation());
 			connection.getAccountManager().createAccount(username, password);

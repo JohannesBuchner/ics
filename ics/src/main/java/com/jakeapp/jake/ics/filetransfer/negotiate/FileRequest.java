@@ -68,7 +68,8 @@ public class FileRequest {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((fileName == null) ? 0 : fileName.hashCode());
+		result = prime * result
+				+ ((fileName == null) ? 0 : fileName.hashCode());
 		result = prime * result + ((peer == null) ? 0 : peer.hashCode());
 		return result;
 	}

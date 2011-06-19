@@ -38,21 +38,24 @@ public class FriendsOnlyMsgService implements IMsgService {
 		new FriendsOnlyReceiveFilter(receiveListener, this.users);
 	}
 
-	@Override public void registerLoginStateListener(ILoginStateListener loginListener) {
+	@Override
+	public void registerLoginStateListener(ILoginStateListener loginListener) {
 	}
 
 	@Override
 	public Boolean sendMessage(UserId to_userid, String content)
-			throws NetworkException, TimeoutException,
-			NoSuchUseridException, OtherUserOfflineException {
+			throws NetworkException, TimeoutException, NoSuchUseridException,
+			OtherUserOfflineException {
 		return users.isFriend(to_userid) && msg.sendMessage(to_userid, content);
 	}
 
 	@Override
-	public void unRegisterReceiveMessageListener(IMessageReceiveListener receiveListener) {
-		//empty implementation
+	public void unRegisterReceiveMessageListener(
+			IMessageReceiveListener receiveListener) {
+		// empty implementation
 	}
 
-	@Override public void unRegisterLoginStateListener(ILoginStateListener loginListener) {
+	@Override
+	public void unRegisterLoginStateListener(ILoginStateListener loginListener) {
 	}
 }

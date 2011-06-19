@@ -45,7 +45,8 @@ public class SimpleFakeMessageExchanger {
 		}
 
 		@Override
-		public void registerReceiveMessageListener(IMessageReceiveListener receiveListener) {
+		public void registerReceiveMessageListener(
+				IMessageReceiveListener receiveListener) {
 			log.debug("registering MessageReceiveListener on " + user);
 			listener.add(receiveListener);
 		}
@@ -56,8 +57,8 @@ public class SimpleFakeMessageExchanger {
 
 		@Override
 		public Boolean sendMessage(UserId to_userid, String content)
-				throws NetworkException, TimeoutException, NoSuchUseridException,
-				OtherUserOfflineException {
+				throws NetworkException, TimeoutException,
+				NoSuchUseridException, OtherUserOfflineException {
 			log.debug(user + " -> " + to_userid + " : " + content);
 			users.get(to_userid).notify(user, content);
 			return true;
@@ -95,7 +96,8 @@ public class SimpleFakeMessageExchanger {
 		}
 
 		@Override
-		public void unRegisterLoginStateListener(ILoginStateListener loginListener) {
+		public void unRegisterLoginStateListener(
+				ILoginStateListener loginListener) {
 		}
 	}
 }

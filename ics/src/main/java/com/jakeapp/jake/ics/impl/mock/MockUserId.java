@@ -19,8 +19,9 @@ public class MockUserId extends UserId {
 
 	@Override
 	public boolean isOfCorrectUseridFormat() {
-		return this.userId.contains("@") && this.userId.lastIndexOf("@") == this.userId
-						.lastIndexOf("@") && this.userId.indexOf("@") > 0 && this.userId
-						.indexOf("@") < this.userId.length() - 1;
+		return this.userId.contains("@")
+				&& this.userId.lastIndexOf("@") == this.userId.lastIndexOf("@")
+				&& this.userId.indexOf("@") > 0
+				&& this.userId.indexOf("@") < this.userId.length() - 1;
 	}
 }

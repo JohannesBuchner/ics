@@ -34,10 +34,12 @@ public abstract class FileTransfer implements IFileTransfer {
 	@Override
 	public String toString() {
 		String s = "FileTransfer(";
-		s+= "request=" + this.request + ",";
-		s+= "localFile=" + (this.localFile == null ? null : this.localFile.getAbsolutePath()) + ",";
-		s+= "status=" + this.status + ",";
-		s+= "peer=" + this.peer + ",";
+		s += "request=" + this.request + ",";
+		s += "localFile="
+				+ (this.localFile == null ? null : this.localFile
+						.getAbsolutePath()) + ",";
+		s += "status=" + this.status + ",";
+		s += "peer=" + this.peer + ",";
 		return s + ")";
 	}
 

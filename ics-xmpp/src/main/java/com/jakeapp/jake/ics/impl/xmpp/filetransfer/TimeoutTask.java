@@ -10,16 +10,19 @@ import com.jakeapp.jake.ics.filetransfer.negotiate.FileRequest;
 import com.jakeapp.jake.ics.filetransfer.negotiate.INegotiationSuccessListener;
 
 /**
- * Scheduleable Task that invalidates a FileRequest by calling the appropriate method
- * of a IOutgoingRequestManager.
+ * Scheduleable Task that invalidates a FileRequest by calling the appropriate
+ * method of a IOutgoingRequestManager.
+ * 
  * @author christopher
  */
 public class TimeoutTask extends TimerTask {
 
 	private INegotiationSuccessListener nsl;
+
 	private IOutgoingRequestManager requestManager;
+
 	private FileRequest request;
-	
+
 	private void setRequest(FileRequest request) {
 		this.request = request;
 	}
@@ -43,7 +46,7 @@ public class TimeoutTask extends TimerTask {
 	private IOutgoingRequestManager getRequestManager() {
 		return requestManager;
 	}
-	
+
 	public TimeoutTask(IOutgoingRequestManager requestManager,
 			INegotiationSuccessListener nsl, FileRequest request) {
 		super();
@@ -52,7 +55,9 @@ public class TimeoutTask extends TimerTask {
 		this.setRequest(request);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.util.TimerTask#run()
 	 */
 	@Override

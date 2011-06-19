@@ -26,13 +26,13 @@ public class TestXmppICMsgSending {
 
 	private ICService ics2;
 
-	private static XmppUserId testUser1 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser1"));
+	private static XmppUserId testUser1 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser1"));
 
 	private static String testUser1Passwd = "testpasswd1";
 
-	private static XmppUserId testUser2 = new XmppUserId(XmppTestEnvironment
-			.getXmppId("testuser2"));
+	private static XmppUserId testUser2 = new XmppUserId(
+			XmppTestEnvironment.getXmppId("testuser2"));
 
 	private static String testUser2Passwd = "testpasswd2";
 
@@ -47,8 +47,7 @@ public class TestXmppICMsgSending {
 		XmppTestEnvironment.assureUserIdExists(testUser2, testUser2Passwd);
 
 		this.ics = new XmppICService(testnamespace, testgroupname);
-		this.ics.getStatusService().login(testUser1,
-				testUser1Passwd, null, 0);
+		this.ics.getStatusService().login(testUser1, testUser1Passwd, null, 0);
 		this.ics2 = new XmppICService(testnamespace, testgroupname);
 	}
 
@@ -93,8 +92,7 @@ public class TestXmppICMsgSending {
 					}
 
 				});
-		this.ics2.getStatusService().login(testUser2,
-				testUser2Passwd, null, 0);
+		this.ics2.getStatusService().login(testUser2, testUser2Passwd, null, 0);
 		this.ics.getMsgService().sendMessage(testUser2, testmsgcontent2);
 		Assert.assertTrue(c.await(2, 7, TimeUnit.SECONDS));
 	}
@@ -107,8 +105,7 @@ public class TestXmppICMsgSending {
 		final String testmsgcontent3 = testmsgcontent2 + " >> yeah, srsly!";
 		final Counter c = new Counter();
 
-		this.ics2.getStatusService().login(testUser2,
-				testUser2Passwd, null, 0);
+		this.ics2.getStatusService().login(testUser2, testUser2Passwd, null, 0);
 		this.ics2.getMsgService().registerReceiveMessageListener(
 				new IMessageReceiveListener() {
 
@@ -141,6 +138,7 @@ public class TestXmppICMsgSending {
 				});
 		this.ics.getMsgService().registerReceiveMessageListener(
 				new IMessageReceiveListener() {
+
 					// practically a echo service
 					@Override
 					public void receivedMessage(UserId from_userid,
@@ -160,14 +158,14 @@ public class TestXmppICMsgSending {
 		this.ics.getMsgService().sendMessage(testUser2, testmsgcontent1);
 		Assert.assertTrue(c.await(2, 5, TimeUnit.SECONDS));
 	}
+
 	@Test
 	@Prerequisite(checker = XmppTestEnvironment.class)
 	public void testReceiveSend_XML() throws Exception {
 		final String testmsgcontent = "<msg>hello</msg>";
 		final Counter c = new Counter();
 
-		this.ics2.getStatusService().login(testUser2,
-				testUser2Passwd, null, 0);
+		this.ics2.getStatusService().login(testUser2, testUser2Passwd, null, 0);
 		this.ics2.getMsgService().registerReceiveMessageListener(
 				new IMessageReceiveListener() {
 

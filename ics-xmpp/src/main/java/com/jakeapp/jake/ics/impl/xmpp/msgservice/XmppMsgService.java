@@ -31,15 +31,16 @@ public class XmppMsgService implements IMsgService, ILoginStateListener {
 	private boolean initialized = false;
 
 	private void initialize() {
-		if (this.initialized || !this.con.getService().getStatusService().isLoggedIn())
+		if (this.initialized
+				|| !this.con.getService().getStatusService().isLoggedIn())
 			return;
 
 		ProviderManager.getInstance().addExtensionProvider("custom",
 				this.con.getNamespace(),
 				new GenericPacketProvider(this.con.getNamespace()));
 
-		this.con.getConnection()
-				.addPacketListener(this.packetListener, this.packetListener);
+		this.con.getConnection().addPacketListener(this.packetListener,
+				this.packetListener);
 
 
 		this.initialized = true;
@@ -48,7 +49,8 @@ public class XmppMsgService implements IMsgService, ILoginStateListener {
 	public XmppMsgService(XmppConnectionData connection) {
 		this.con = connection;
 		this.con.getService().getStatusService().addLoginStateListener(this);
-		this.packetListener = new IncomingGenericPacketListener(this.con.getNamespace());
+		this.packetListener = new IncomingGenericPacketListener(
+				this.con.getNamespace());
 		initialize();
 	}
 
@@ -78,12 +80,21 @@ public class XmppMsgService implements IMsgService, ILoginStateListener {
 		if (!new XmppUserId(to_userid).isOfCorrectUseridFormat())
 			throw new NoSuchUseridException("format is invalid");
 
-		String safecontent = Base64.encodeBytes(content.getBytes(), Base64.GZIP);
-		Message m = new Message(to_userid.getUserId(), Message.Type.normal); // explicitly set the type of the message
-//		m.setSubject("a"+ UUID.randomUUID().toString());
-//		m.setBody("b"); // this somehow needs to be done for the message to be cached on the server
+		String safecontent = Base64
+				.encodeBytes(content.getBytes(), Base64.GZIP);
+		Message m = new Message(to_userid.getUserId(), Message.Type.normal); // explicitly
+																				// set
+																				// the
+																				// type
+																				// of
+																				// the
+																				// message
+		// m.setSubject("a"+ UUID.randomUUID().toString());
+		// m.setBody("b"); // this somehow needs to be done for the message to
+		// be cached on the server
 		m.setFrom(this.con.getConnection().getUser());
-		m.addExtension(new GenericPacketExtension(this.con.getNamespace(), safecontent));
+		m.addExtension(new GenericPacketExtension(this.con.getNamespace(),
+				safecontent));
 		log.info("Sending message to " + to_userid.getUserId());
 		log.debug("Content:" + content);
 		this.con.getConnection().sendPacket(m);
@@ -93,7 +104,8 @@ public class XmppMsgService implements IMsgService, ILoginStateListener {
 
 	@Override
 	public IMsgService getFriendMsgService() {
-		return new FriendsOnlyMsgService(this.con.getService().getUsersService(), this);
+		return new FriendsOnlyMsgService(this.con.getService()
+				.getUsersService(), this);
 	}
 
 	@Override

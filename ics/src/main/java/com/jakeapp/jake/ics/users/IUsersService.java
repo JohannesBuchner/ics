@@ -8,7 +8,7 @@ import com.jakeapp.jake.ics.exceptions.NotLoggedInException;
 import com.jakeapp.jake.ics.status.IOnlineStatusListener;
 
 /**
- * provides abstraction to our friends-group 
+ * provides abstraction to our friends-group
  * 
  * @author johannes
  */
@@ -17,10 +17,13 @@ public interface IUsersService {
 	/**
 	 * Registers a callback for the event that the userid goes online or offline
 	 * 
-	 * @param onlineStatusListener     object to be called
-	 * @throws NoSuchUseridException    if the user does not exist
+	 * @param onlineStatusListener
+	 *            object to be called
+	 * @throws NoSuchUseridException
+	 *             if the user does not exist
 	 */
-	public void registerOnlineStatusListener(IOnlineStatusListener onlineStatusListener);
+	public void registerOnlineStatusListener(
+			IOnlineStatusListener onlineStatusListener);
 
 	/**
 	 * idempotent add to communications group function
@@ -31,8 +34,8 @@ public interface IUsersService {
 	 * @throws NotLoggedInException
 	 * @throws IOException
 	 */
-	public void addUser(UserId user, String name)
-			throws NoSuchUseridException, NotLoggedInException, IOException;
+	public void addUser(UserId user, String name) throws NoSuchUseridException,
+			NotLoggedInException, IOException;
 
 	/**
 	 * idempotent remove from communication group function
@@ -65,9 +68,10 @@ public interface IUsersService {
 	 * @param xmppid
 	 * @return
 	 * @throws NotLoggedInException
-	 * @throws NoSuchUseridException 
+	 * @throws NoSuchUseridException
 	 */
-	public boolean isFriend(UserId xmppid) throws NotLoggedInException, NoSuchUseridException;
+	public boolean isFriend(UserId xmppid) throws NotLoggedInException,
+			NoSuchUseridException;
 
 	/**
 	 * blocking request for a online-status notification You should prefer
@@ -76,10 +80,11 @@ public interface IUsersService {
 	 * @param userid
 	 * @return
 	 * @throws IOException
-	 * @throws NotLoggedInException 
-	 * @throws NoSuchUseridException 
+	 * @throws NotLoggedInException
+	 * @throws NoSuchUseridException
 	 */
-	public boolean isCapable(UserId userid) throws IOException, NotLoggedInException, NoSuchUseridException;
+	public boolean isCapable(UserId userid) throws IOException,
+			NotLoggedInException, NoSuchUseridException;
 
 	/**
 	 * nonblocking request for a online-status notification
@@ -91,7 +96,7 @@ public interface IUsersService {
 			throws NotLoggedInException;
 
 	/**
-	 * get the name associated with this user 
+	 * get the name associated with this user
 	 * 
 	 * @param user
 	 * @return the name as set by addUser, or an empty String

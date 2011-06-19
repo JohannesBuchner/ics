@@ -37,6 +37,7 @@ public class XmppConnectionData {
 
 	/**
 	 * reflect ourselves to combine the services
+	 * 
 	 * @return
 	 */
 	public XmppICService getService() {
@@ -46,6 +47,7 @@ public class XmppConnectionData {
 	/**
 	 * The XML namespace to use to identify users online with a compatible
 	 * client
+	 * 
 	 * @return
 	 */
 	public String getNamespace() {
@@ -54,6 +56,7 @@ public class XmppConnectionData {
 
 	/**
 	 * The Roster group name to use
+	 * 
 	 * @return
 	 */
 	public String getGroupname() {
@@ -61,7 +64,7 @@ public class XmppConnectionData {
 	}
 
 	/* short functions */
-	
+
 	public XmppUserId getUserId() {
 		return new XmppUserId(this.connection.getUser());
 	}

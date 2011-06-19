@@ -15,7 +15,8 @@ public class FriendsOnlyReceiveFilter implements IMessageReceiveListener {
 
 	private IUsersService users;
 
-	public FriendsOnlyReceiveFilter(IMessageReceiveListener receiveListener, IUsersService users) {
+	public FriendsOnlyReceiveFilter(IMessageReceiveListener receiveListener,
+			IUsersService users) {
 		this.innerListener = receiveListener;
 		this.users = users;
 	}

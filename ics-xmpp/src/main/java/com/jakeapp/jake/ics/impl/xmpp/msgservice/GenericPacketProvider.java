@@ -9,11 +9,11 @@ public class GenericPacketProvider implements PacketExtensionProvider {
 	private String namespace;
 
 	public GenericPacketProvider(String namespace) {
-		if(namespace == null)
+		if (namespace == null)
 			throw new NullPointerException();
 		this.namespace = namespace;
 	}
-	
+
 	public PacketExtension parseExtension(XmlPullParser parser)
 			throws Exception {
 		String content = null;

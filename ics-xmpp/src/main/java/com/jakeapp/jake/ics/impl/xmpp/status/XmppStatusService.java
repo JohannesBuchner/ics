@@ -27,7 +27,7 @@ import java.util.List;
 
 
 /**
- * The Status Service. There's a main one  + one for every project.
+ * The Status Service. There's a main one + one for every project.
  */
 public class XmppStatusService implements IStatusService {
 
@@ -40,9 +40,10 @@ public class XmppStatusService implements IStatusService {
 	private ConnectionListener connectionListener = new XmppConnectionListener();
 
 	private ILoginStateListener.ConnectionState lastState;
-	
+
 	/**
 	 * sets the new ConnectionState
+	 * 
 	 * @param state
 	 * @return true if state changed.
 	 */
@@ -54,7 +55,7 @@ public class XmppStatusService implements IStatusService {
 			return true;
 		}
 	}
-	
+
 	public XmppStatusService(XmppConnectionData connection) {
 		this.con = connection;
 	}
@@ -62,7 +63,7 @@ public class XmppStatusService implements IStatusService {
 	private void addDiscoveryFeature() {
 		// Obtain the ServiceDiscoveryManager associated with my XMPPConnection
 		ServiceDiscoveryManager discoManager = ServiceDiscoveryManager
-				  .getInstanceFor(this.con.getConnection());
+				.getInstanceFor(this.con.getConnection());
 
 		// Register that a new feature is supported by this XMPP entity
 		discoManager.addFeature(this.con.getNamespace());
@@ -70,7 +71,7 @@ public class XmppStatusService implements IStatusService {
 
 	@Override
 	public String getFirstname(UserId userid) throws NoSuchUseridException,
-			  OtherUserOfflineException {
+			OtherUserOfflineException {
 		// TODO replace with real implementation (VCard)
 		XmppUserId xid = new XmppUserId(userid);
 		if (!xid.isOfCorrectUseridFormat())
@@ -84,7 +85,7 @@ public class XmppStatusService implements IStatusService {
 
 	@Override
 	public String getLastname(UserId userid) throws NoSuchUseridException,
-			  OtherUserOfflineException {
+			OtherUserOfflineException {
 		// TODO replace with real implementation (VCard)
 		XmppUserId xid = new XmppUserId(userid);
 		if (!xid.isOfCorrectUseridFormat())
@@ -93,8 +94,7 @@ public class XmppStatusService implements IStatusService {
 		if (!xid.getUsername().contains(".")) {
 			return "";
 		}
-		return xid.getUsername().substring(
-				  xid.getUsername().indexOf(".") + 1);
+		return xid.getUsername().substring(xid.getUsername().indexOf(".") + 1);
 	}
 
 	@Override
@@ -120,7 +120,8 @@ public class XmppStatusService implements IStatusService {
 	}
 
 	@Override
-	public Boolean isLoggedIn(UserId userid) throws NetworkException, TimeoutException {
+	public Boolean isLoggedIn(UserId userid) throws NetworkException,
+			TimeoutException {
 		if (!new XmppUserId(userid).isOfCorrectUseridFormat())
 			throw new NoSuchUseridException();
 		if (XmppUserId.isSameUser(getUserid(), userid))
@@ -130,9 +131,9 @@ public class XmppStatusService implements IStatusService {
 
 		if (getRoster().getEntry(userid.toString()) != null) {
 			log.debug("Type for " + userid + ": "
-					  + getRoster().getEntry(userid.toString()).getType());
+					+ getRoster().getEntry(userid.toString()).getType());
 			log.debug("Status for " + userid + ": "
-					  + getRoster().getEntry(userid.toString()).getStatus());
+					+ getRoster().getEntry(userid.toString()).getStatus());
 		}
 		Presence p = getRoster().getPresence(userid.toString());
 		log.debug("Presence for " + userid + ": " + p);
@@ -146,7 +147,8 @@ public class XmppStatusService implements IStatusService {
 	}
 
 	@Override
-	public void login(UserId userid, String pw, String host, long port) throws NetworkException {
+	public void login(UserId userid, String pw, String host, long port)
+			throws NetworkException {
 		XmppUserId xuid = new XmppUserId(userid);
 		if (!xuid.isOfCorrectUseridFormat())
 			throw new NoSuchUseridException();
@@ -162,13 +164,16 @@ public class XmppStatusService implements IStatusService {
 		fireConnectionStateChanged(ILoginStateListener.ConnectionState.CONNECTING);
 
 		try {
-			connection = XmppCommons.login(xuid.getUserId(), pw, host, port, xuid.getResource());
+			connection = XmppCommons.login(xuid.getUserId(), pw, host, port,
+					xuid.getResource());
 			connection.addConnectionListener(connectionListener);
 		} catch (IOException e) {
 			log.debug("connecting failed (network problems?)", e);
 			throw new NetworkException(e);
-		}catch (XMPPException e) {
-			log.debug("connecting failed (wrong credientals, generic xmpp error)", e);
+		} catch (XMPPException e) {
+			log.debug(
+					"connecting failed (wrong credientals, generic xmpp error)",
+					e);
 			throw new NetworkException(e);
 		}
 
@@ -188,13 +193,15 @@ public class XmppStatusService implements IStatusService {
 			public void presenceChanged(Presence presence) {
 				final String xmppid = presence.getFrom();
 				XmppStatusService.log.debug("presenceChanged: " + xmppid
-						  + " - " + presence);
+						+ " - " + presence);
 
 				if (isLoggedIn()) {
 					try {
-						XmppStatusService.this.con.getService()
-								  .getUsersService().requestOnlineNotification(
-								  new XmppUserId(xmppid));
+						XmppStatusService.this.con
+								.getService()
+								.getUsersService()
+								.requestOnlineNotification(
+										new XmppUserId(xmppid));
 					} catch (NotLoggedInException e) {
 						log.debug("Shouldn't happen", e);
 					}
@@ -209,8 +216,9 @@ public class XmppStatusService implements IStatusService {
 	@Override
 	public void logout() throws NetworkException {
 		XmppCommons.logout(this.con.getConnection());
-		if(this.con.getConnection() != null) {
-			this.con.getConnection().removeConnectionListener(connectionListener);
+		if (this.con.getConnection() != null) {
+			this.con.getConnection().removeConnectionListener(
+					connectionListener);
 		}
 		this.con.setConnection(null);
 		fireConnectionStateChanged(ILoginStateListener.ConnectionState.LOGGED_OUT);
@@ -219,15 +227,19 @@ public class XmppStatusService implements IStatusService {
 
 	/**
 	 * Fires the new Connection state to all registered listeners.
+	 * 
 	 * @param state
 	 */
-	private void fireConnectionStateChanged(ILoginStateListener.ConnectionState state) {
-		// we have to copy our current listeners cause e.g. XmppFileTransferMethod may
+	private void fireConnectionStateChanged(
+			ILoginStateListener.ConnectionState state) {
+		// we have to copy our current listeners cause e.g.
+		// XmppFileTransferMethod may
 		// register on our listener just as we are spreading the event...
 		if (setLastState(state)) {
-			for (ILoginStateListener lsl : new ArrayList<ILoginStateListener>(lsll)) {
+			for (ILoginStateListener lsl : new ArrayList<ILoginStateListener>(
+					lsll)) {
 				try {
-					lsl.connectionStateChanged(state,null);
+					lsl.connectionStateChanged(state, null);
 				} catch (Exception e) {
 					log.error("bad listener", e);
 				}
@@ -238,7 +250,7 @@ public class XmppStatusService implements IStatusService {
 	@Override
 	public void createAccount(UserId userid, String pw) throws NetworkException {
 		XmppUserId xmppUserId = new XmppUserId(userid);
-		
+
 		if (!xmppUserId.isOfCorrectUseridFormat())
 			throw new NoSuchUseridException();
 		if (isLoggedIn())
@@ -247,8 +259,10 @@ public class XmppStatusService implements IStatusService {
 
 		XMPPConnection connection;
 		try {
-			log.warn("creating account with:"+xmppUserId.getUserIdWithOutResource());
-			connection = XmppCommons.createAccount(xmppUserId.getUserIdWithOutResource(), pw);
+			log.warn("creating account with:"
+					+ xmppUserId.getUserIdWithOutResource());
+			connection = XmppCommons.createAccount(
+					xmppUserId.getUserIdWithOutResource(), pw);
 		} catch (IOException e) {
 			log.debug("create failed: " + e.getMessage());
 			throw new NetworkException(e);
@@ -273,26 +287,33 @@ public class XmppStatusService implements IStatusService {
 
 
 	/**
-	 * Inner class to translate smack's connection events to our common interface
+	 * Inner class to translate smack's connection events to our common
+	 * interface
 	 */
 	private class XmppConnectionListener implements ConnectionListener {
-		@Override public void connectionClosed() {
+
+		@Override
+		public void connectionClosed() {
 			fireConnectionStateChanged(ILoginStateListener.ConnectionState.LOGGED_OUT);
 		}
 
-		@Override public void connectionClosedOnError(Exception e) {
+		@Override
+		public void connectionClosedOnError(Exception e) {
 			fireConnectionStateChanged(ILoginStateListener.ConnectionState.LOGGED_OUT);
 		}
 
-		@Override public void reconnectingIn(int i) {
+		@Override
+		public void reconnectingIn(int i) {
 			fireConnectionStateChanged(ILoginStateListener.ConnectionState.CONNECTING);
 		}
 
-		@Override public void reconnectionSuccessful() {
+		@Override
+		public void reconnectionSuccessful() {
 			fireConnectionStateChanged(ILoginStateListener.ConnectionState.LOGGED_IN);
 		}
 
-		@Override public void reconnectionFailed(Exception e) {
+		@Override
+		public void reconnectionFailed(Exception e) {
 			fireConnectionStateChanged(ILoginStateListener.ConnectionState.LOGGED_OUT);
 		}
 	}
