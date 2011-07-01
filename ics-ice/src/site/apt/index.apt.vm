@@ -1,0 +1,10 @@
+	--------------------------
+	About ICS-ICE
+
+About ICS-ICE
+
+  ${project.description}
+  
+  ICS-ICE allows the negotiation of IP addresses and the establishment of a file transfer using ICE/STUN protocols. These cope with the existing NAT infrastructure of the network.
+
+  ICS-ICE uses ice4j.
