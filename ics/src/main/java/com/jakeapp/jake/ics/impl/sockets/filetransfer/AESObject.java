@@ -24,7 +24,7 @@ public class AESObject {
 
 	private static final String CIPHERNAME = "AES";
 
-	private static final int KEYLENGTH = 129;
+	private static final int KEYLENGTH = 128;
 
 	private SecretKey skey;
 
@@ -36,7 +36,7 @@ public class AESObject {
 	 */
 	public AESObject() throws NoSuchAlgorithmException, NoSuchPaddingException {
 		KeyGenerator kgen = KeyGenerator.getInstance(CIPHERNAME);
-		kgen.init(128);
+		kgen.init(KEYLENGTH);
 		skey = kgen.generateKey();
 		Cipher.getInstance(CIPHERNAME);
 	}

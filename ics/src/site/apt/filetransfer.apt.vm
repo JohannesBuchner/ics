@@ -1,0 +1,43 @@
+	--------------------------
+	File Transfers
+
+FileTransfer API
+
+  The FileTransfer API 
+   
+    * implements a Request-Response infrastructure, like HTTP
+
+    * is low-level transfer independent
+  
+How does it work?
+
+---------------------------------------
+ITransferMethodFactory
+ \
+  \_.getTransferMethod 
+      |
+      v
+ ITransferMethod
+    \ \ \
+     \ \ \.stopServing()             maps "content address" to a file
+      \ \                              / 
+       \ \_.startServing(FileRequestFileMapper)
+        \
+         \_.request(
+              FileRequest, -- contains userid, "content address"
+              INegotiationSuccessListener)
+                                 /   |
+                                /    |
+                               /     .failed(Exception)
+                              /
+                       succeeded(IFileTransfer)
+                                  | status, progress, etc.
+
+--------------------------------------
+
+  The ITransferMethodFactory may be failover, see FailoverCapableFileTransferService.
+    Having a list of ITransferMethodFactory, when negotiation of the first fails, 
+    it tries the next ITransferMethodFactory.
+
+
+  

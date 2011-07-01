@@ -13,6 +13,7 @@
 		</links>
 		<menu name="General">
 			<item name="About" href="index.html" />
+			<item name="FileTransfer Architecture" href="filetransfer.html" />
 			<item name="Team" href="team-list.html" />
 			<item name="Code Repository" href="source-repository.html" />
 			<item name="Javadoc" href="apidocs/index.html" />
