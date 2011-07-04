@@ -7,4 +7,10 @@ About ICS-ICE
   
   ICS-ICE allows the negotiation of IP addresses and the establishment of a file transfer using ICE/STUN protocols. These cope with the existing NAT infrastructure of the network.
 
-  ICS-ICE uses ice4j.
+  ICS-ICE uses icedjava to establish ICE connectivity (Peer-to-Peer connections). Any ICS can be used as a rendevouz-protocol. Icedjava lets us support NATPMP, UPnP, STUN and all sorts of NATs. Please let us know if connecting is working for you or not.
+ 
+  java-udt is used for UDT sockets. UDT is a fast UDP-based transfer protocol.
+
+  The Advanced Encryption Standard (AES) is the secure method of encryption used for privacy. AES is a widely used, well-tested and established method for secure transactions. The encryption key is exchanged through the rendevouz-protocol (usually XMPP).
+
+  

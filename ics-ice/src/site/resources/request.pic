@@ -1,0 +1,52 @@
+.PS
+down
+
+C: box "active" fill 0.1 rad 0.25
+S: box "inactive" at C + (4,0) fill 0.1 rad 0.25
+"\fB\f4\mkICE File Requests\rt\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul\ul" at C + (2,0.5) 
+C1: box "ICE connect" at C - (-1,1) width 1.25
+C11: box "collecting addresses" at C1 - (2,0) width 1.75
+arrow from C.s to C1.n
+arrow from C.s to C11.n
+S1: box "recv" at S - (0,1.5)
+arrow from C1.ne to S1.nw dashed "request ICE start (over rendevouz)" above ljust
+arrow from C1.se to S1.sw dashed "ICE connect" above "                           as client" above
+S12: box "send" width 1.25 at S1 - (0.5,1)
+S11: box "collecting addresses" width 1.75 at S1 - (-1,1)
+arrow from S1.s to S11.n
+arrow from S1.s to S12.n
+arrow from S12.w to S11 - (4,0.5) dashed "ICE connect" above "as server" below
+
+line dotted from S11.s down down
+S2: box "UDT connection established" width 2.5
+line dotted from C11.s down down down down down
+C2: box "UDT connection established" width 2.5
+down
+arrow
+down
+C3: box "request"
+S3: box "recv" at S2 - (1,1.5)
+down
+arrow
+down
+S4: box "serve"
+
+
+arrow from C3.e to S3.w dashed "request <id>" above "(over rendevouz)" below
+arrow from S4.w to C3.e - (0,2) dashed "ack; encryption key" above "(over rendevouz)" below
+C5:box "setup storage" width 1.25
+arrow from S4.s to C3.e - (0,3) dashed "file content" above "(over UDT)" below
+C6: box "store, check" width 1.25
+arrow from C5.s to C6.n
+
+move down down
+
+T: "The philosophy is to first establish a ICS/UDT connection, and then to request stuff" ljust
+"and deliver through the socket." ljust at T - (0,0.2)
+
+move to S + (2.75,-0.5)
+X: spline right 0.25 then down 4 then left 0.25
+move to S + (5.1,-2.5) 
+box "on request (reactive)" ljust "\mkor\rt\ul\ul once both users" ljust "are logged in (proactive)" ljust  width 4 invis
+
+.PE
