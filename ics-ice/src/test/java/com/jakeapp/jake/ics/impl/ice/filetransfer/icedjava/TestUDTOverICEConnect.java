@@ -7,10 +7,10 @@ import java.io.PrintWriter;
 import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import udt.UDTClient;
 import udt.UDTSocket;
 import udt.util.Util;
 
@@ -28,6 +28,8 @@ public class TestUDTOverICEConnect {
 
 	private static final String MESSAGE = "secret message";
 
+	private static final String MESSAGE2 = "secret answer";
+
 	private UDTOverICEConnect conClient;
 
 	private UDTOverICEConnect conServer;
@@ -44,6 +46,14 @@ public class TestUDTOverICEConnect {
 				"myclient@localhost"));
 	}
 
+	@After
+	public void tearDown() throws Exception {
+		if (conServer != null)
+			conServer.shutdown(true);
+		if (conClient != null)
+			conClient.shutdown(true);
+
+	}
 
 	private AvailableLater<UDTSocket> createServer() {
 		return new AvailableLaterObject<UDTSocket>() {
@@ -96,9 +106,20 @@ public class TestUDTOverICEConnect {
 		Assert.assertEquals(recv, MESSAGE);
 		log.debug("done");
 
+		log.debug("writing on client");
+		pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream(),
+				"UTF-8"));
+		pw.println(MESSAGE2);
+		pw.flush();
+
+		log.debug("reading on server");
+		recv = Util.readLine(server.getInputStream());
+
+		log.debug("matching");
+		Assert.assertEquals(recv, MESSAGE2);
+		log.debug("done");
+
 		client.close();
 		server.close();
-		conServer.shutdown();
-		conClient.shutdown();
 	}
 }

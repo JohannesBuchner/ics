@@ -38,6 +38,8 @@ public class UDTTransferTest {
 
 	private static final String MESSAGE = "secret message";
 
+	private static final String MESSAGE2 = "secret answer";
+
 	private DatagramSocket conServer;
 
 	private DatagramChannel conServerChannel;
@@ -243,6 +245,20 @@ public class UDTTransferTest {
 		log.debug("matching");
 		Assert.assertEquals(recv, MESSAGE);
 		log.debug("done");
+
+		log.debug("writing on client");
+		pw = new PrintWriter(new OutputStreamWriter(client.getOutputStream(),
+				"UTF-8"));
+		pw.println(MESSAGE2);
+		pw.flush();
+
+		log.debug("reading on server");
+		recv = Util.readLine(server.getInputStream());
+
+		log.debug("matching");
+		Assert.assertEquals(recv, MESSAGE2);
+		log.debug("done");
+
 
 		client.close();
 		server.close();

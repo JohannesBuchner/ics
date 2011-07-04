@@ -1,13 +1,11 @@
 package com.jakeapp.jake.ics.impl.ice.filetransfer.icedjava;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.sdp.Attribute;
@@ -30,19 +28,13 @@ import org.apache.log4j.Logger;
 import org.glassfish.grizzly.nio.transport.UDPNIOTransport;
 
 import udt.ClientSession;
-import udt.UDPEndPoint;
 import udt.UDPNIOEndPoint;
-import udt.UDTClient;
 import udt.UDTReceiver;
-import udt.UDTServerSocket;
 import udt.UDTSession;
 import udt.UDTSocket;
 import udt.packets.Destination;
 
-import com.jakeapp.jake.ics.ICService;
 import com.jakeapp.jake.ics.UserId;
-import com.jakeapp.jake.ics.impl.mock.MockICService;
-import com.jakeapp.jake.ics.impl.mock.MockUserId;
 import com.jakeapp.jake.ics.msgservice.IMsgService;
 
 
@@ -54,11 +46,13 @@ public class UDTOverICEConnect {
 
 	private Map<UserId, IcePeer> ice = new HashMap<UserId, IcePeer>();
 
+	private Map<UserId, UDTSocket> sockets = new HashMap<UserId, UDTSocket>();
+
 	private IceSocket socket;
 
-	public void shutdown() {
+	public void shutdown(boolean alsoShutdownSockets) {
 		for (UserId other : ice.keySet()) {
-			shutdownIceFor(other);
+			shutdownIceFor(other, alsoShutdownSockets);
 		}
 	}
 
@@ -93,7 +87,13 @@ public class UDTOverICEConnect {
 		this.msg = msg;
 	}
 
-	public void shutdownIceFor(UserId otheruser) {
+	public void shutdownIceFor(UserId otheruser, boolean alsoShutdownSocket) {
+		if (alsoShutdownSocket)
+			try {
+				sockets.get(otheruser).close();
+			} catch (IOException e) {
+				log.warn("shutting down socket", e);
+			}
 		ice.get(otheruser).close();
 		ice.remove(otheruser);
 	}
@@ -161,7 +161,8 @@ public class UDTOverICEConnect {
 	}
 
 
-	public CandidatePair findCandidatePair(IcePeer peer) throws Exception {
+	public CandidatePair findCandidatePair(IcePeer peer) throws IOException,
+			InterruptedException {
 		log.debug("waiting until peer status == finished");
 		// TODO: replace with asynchronous call once icedjava has one
 		while (peer.getStatus() == IceStatus.IN_PROGRESS
@@ -202,87 +203,104 @@ public class UDTOverICEConnect {
 
 	}
 
-	public UDTSocket initiateSending(UserId otheruser) throws Exception {
-		log.debug("(re)starting ICE server connect");
-		IcePeer peer = createIceFor(otheruser, true);
-		/*
-		 * Once you invoke start() on a peer, ICE processing will begin. The
-		 * Controlled peer will immediately send a reply to the Controller and
-		 * start ICE tests. The Controlling peer, will wait for a reply from the
-		 * Controlled peer, and then begin tests. ICE processing can take from
-		 * several seconds to a minute depending on the number of possibilities,
-		 * and whether Nomination is done aggressively or not. (Aggressive
-		 * nomination can speed processing time, but may chose a less optimal
-		 * pair than normal nomination would.
-		 * 
-		 * Once ICE processing is complete, (The current status can be queried
-		 * using the getStatus() method) or even before then, you may obtain an
-		 * ICE Socket Channel using peer.getChannels(socket) method. Socket
-		 * Channels are analogous to NIO socket channels, and implement many of
-		 * the NIO methods and interfaces. One socket channel corresponds to one
-		 * port, on one media line, connected to one peer. (one media line can
-		 * have multiple ports) Ice processing is, by necessity, a one port to
-		 * one peer proposition, and so there's little purpose in querying the
-		 * source of packets, or directing their destination in an Ice Socket
-		 * Channel. What this also means is that you can treat the Ice Socket
-		 * Channel as a stream, like you would a TCP connection in NIO, just be
-		 * aware that packets may arrive out of order or not at all.
-		 */
-		peer.start();
-
-		CandidatePair a = findCandidatePair(peer);
-		IceSocketChannel ch = peer.getChannels(socket).get(0);
-
-		InetSocketAddress local = a.getLocalCandidate().getSocketAddress();
-		InetSocketAddress remote = a.getRemoteCandidate().getSocketAddress();
-
-		log.debug("creating UDT server side connection");
-		UDPNIOEndPoint serverEnd = new UDPNIOEndPoint(ch, local.getAddress(),
-				local.getPort(), remote.getAddress(), remote.getPort());
-
-		serverEnd.start(true);
-		UDTSession session = null;
-		session = serverEnd.getSession(10000, TimeUnit.MILLISECONDS);
-		// wait for handshake to complete
-		while (!session.isReady() || session.getSocket() == null) {
-			log.debug("server is waiting for handshake response: session ready? "
-					+ session.isReady());
-			Thread.sleep(100);
-		}
-		log.debug("server got socket!");
-		return session.getSocket();
+	public UDTSocket initiateSending(UserId otheruser) throws IOException,
+			SdpException, InterruptedException {
+		return initiate(otheruser, true);
 	}
 
-	public UDTSocket initiateReceiving(UserId otheruser) throws Exception {
-		log.debug("(re)starting ICE client connect");
-		IcePeer peer = createIceFor(otheruser, false);
+	public UDTSocket initiateReceiving(UserId otheruser) throws IOException,
+			InterruptedException, SdpException {
+		return initiate(otheruser, false);
+	}
+
+	public UDTSocket initiate(UserId otheruser, boolean controlling)
+			throws IOException, InterruptedException, SdpException {
+		UDTSocket sock = sockets.get(otheruser);
+		if (sock != null && sock.isActive()) {
+			return sock;
+		}
+
+		log.debug("(re)starting ICE " + (controlling ? "server" : "client")
+				+ " connect");
+		IcePeer peer = createIceFor(otheruser, controlling);
+		if (controlling) {
+			/*
+			 * Once you invoke start() on a peer, ICE processing will begin. The
+			 * Controlled peer will immediately send a reply to the Controller
+			 * and start ICE tests. The Controlling peer, will wait for a reply
+			 * from the Controlled peer, and then begin tests. ICE processing
+			 * can take from several seconds to a minute depending on the number
+			 * of possibilities, and whether Nomination is done aggressively or
+			 * not. (Aggressive nomination can speed processing time, but may
+			 * chose a less optimal pair than normal nomination would.
+			 * 
+			 * Once ICE processing is complete, (The current status can be
+			 * queried using the getStatus() method) or even before then, you
+			 * may obtain an ICE Socket Channel using peer.getChannels(socket)
+			 * method. Socket Channels are analogous to NIO socket channels, and
+			 * implement many of the NIO methods and interfaces. One socket
+			 * channel corresponds to one port, on one media line, connected to
+			 * one peer. (one media line can have multiple ports) Ice processing
+			 * is, by necessity, a one port to one peer proposition, and so
+			 * there's little purpose in querying the source of packets, or
+			 * directing their destination in an Ice Socket Channel. What this
+			 * also means is that you can treat the Ice Socket Channel as a
+			 * stream, like you would a TCP connection in NIO, just be aware
+			 * that packets may arrive out of order or not at all.
+			 */
+			peer.start();
+		}
+
 		CandidatePair a = findCandidatePair(peer);
 		IceSocketChannel ch = peer.getChannels(socket).get(0);
 
-		log.debug("creating UDT client side connection");
 		InetSocketAddress local = a.getLocalCandidate().getSocketAddress();
 		InetSocketAddress remote = a.getRemoteCandidate().getSocketAddress();
 
-		UDPNIOEndPoint clientend = new UDPNIOEndPoint(ch, local.getAddress(),
+		log.debug("creating UDT connection");
+		UDPNIOEndPoint peerEnd = new UDPNIOEndPoint(ch, local.getAddress(),
 				local.getPort(), remote.getAddress(), remote.getPort());
-
-
 		Destination destination = new Destination(remote.getAddress(),
 				remote.getPort());
-		ClientSession sess = new ClientSession(clientend, destination);
-		// destination.setSocketID(sess.getSocketID());
-		log.debug("client: adding session");
-		clientend.addSession(sess.getSocketID(), sess);
-		log.debug("client: starting communication");
-		clientend.start();
-		log.debug("client: connecting...");
-		sess.connect();
-		// wait for handshake
-		while (!sess.isReady()) {
-			log.debug("client: waiting for session to be ready ...");
-			Thread.sleep(500);
-		}
-		return sess.getSocket();
-	}
 
+		UDTSession session = null;
+		if (controlling) {
+			peerEnd.start(true);
+			while (session == null) {
+				try {
+					session = peerEnd.getSession(10000, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException e) {
+					continue;
+				}
+
+				// wait for handshake to complete
+				while (session != null && !session.isReady()
+						|| session.getSocket() == null) {
+					log.debug("server is waiting for handshake response: session ready? "
+							+ session.isReady());
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+					}
+				}
+			}
+		} else {
+			ClientSession sess = new ClientSession(peerEnd, destination);
+			// destination.setSocketID(sess.getSocketID());
+			log.debug("client: adding session");
+			peerEnd.addSession(sess.getSocketID(), sess);
+			log.debug("client: starting communication");
+			peerEnd.start();
+			log.debug("client: connecting...");
+			sess.connect();
+			session = sess;
+			// wait for handshake
+			while (!sess.isReady()) {
+				log.debug("client: waiting for session to be ready ...");
+				Thread.sleep(500);
+			}
+		}
+		sockets.put(otheruser, session.getSocket());
+		return session.getSocket();
+	}
 }

@@ -61,9 +61,8 @@ public class IncomingGenericPacketListener implements PacketListener,
 		for (IMessageReceiveListener imrl : listeners) {
 			try {
 				imrl.receivedMessage(xmppUserId, content);
-			} catch (Exception ignored) {
-				ignored.printStackTrace();
-				// empty implementation
+			} catch (Exception e) {
+				log.warn("bad listener through a exception", e);
 			}
 		}
 	}
