@@ -60,7 +60,7 @@ public class IceUdtFileTransfer extends FileTransfer implements Runnable {
 				log.debug("receiving content ... ");
 				int len = in.read(b);
 				log.debug("received " + len + " bytes ... ");
-				if (len == -1)
+				if (len == -1 || len == 0 && !this.s.isActive())
 					break;
 				if (len > 0) {
 					this.amountWritten += len;
