@@ -14,8 +14,6 @@ import javax.sdp.SessionDescription;
 
 import org.apache.log4j.Logger;
 
-import net.mc_cubed.icedjava.ice.SDPListener;
-
 /**
  * Adapter to provide two-way communication through a text-based rendevouz
  * protocol, with a convenient interface.
@@ -29,26 +27,6 @@ public abstract class SDPTextCommunicationListener extends
 			.getLogger(SDPTextCommunicationListener.class);
 
 	private SdpFactory sdpFactory = SdpFactory.getInstance();
-
-	public SDPTextCommunicationListener(SDPListener receiver) {
-		super(receiver);
-	}
-
-	@SuppressWarnings("unchecked")
-	protected void onReceiveText(String text) throws SdpParseException {
-		SessionDescription session = SdpFactory.getInstance()
-				.createSessionDescription(text);
-		try {
-			onReceive(session.getConnection(), session.getAttributes(true),
-					session.getMediaDescriptions(true));
-		} catch (SdpException e) {
-			log.error(e);
-			throw new SdpParseException(0, 0,
-					"SdpException when unmarshalling string to sdp", e);
-		}
-
-	}
-
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -72,7 +50,8 @@ public abstract class SDPTextCommunicationListener extends
 		} catch (IOException e) {
 			log.error(e);
 			throw new SdpParseException(0, 0,
-					"IOException when marshalling sdp to string", e);
+					"IOException when marshalling sdp to string: "
+							+ e.getMessage(), e);
 		}
 	}
 

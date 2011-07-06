@@ -47,6 +47,8 @@ public class MockConnectingMsgService implements IMsgService {
 		MockConnectingMsgService msg = getInstance(to_userid);
 		if (msg == null)
 			throw new OtherUserOfflineException();
+		if (msg.listener == null)
+			throw new OtherUserOfflineException();
 		msg.listener.receivedMessage(user, content);
 		return true;
 	}

@@ -39,17 +39,15 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.channels.ByteChannel;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.sdp.Info;
+import org.apache.commons.beanutils.converters.ByteArrayConverter;
 
-import org.apache.log4j.lf5.LogLevel;
-
-import net.mc_cubed.icedjava.ice.IceSocketChannel;
 import udt.packets.ConnectionHandshake;
 import udt.packets.Destination;
 import udt.packets.PacketFactory;
@@ -80,109 +78,7 @@ public class UDPNIOEndPoint extends UDPEndPoint {
 	// has the endpoint been stopped?
 	private volatile boolean stopped = false;
 
-	private InetAddress addr;
-
-	/**
-	 * create an endpoint on the given socket
-	 * 
-	 * @param socket
-	 *            - a UDP datagram socket
-	 * @throws UnknownHostException
-	 * @throws SocketException
-	 */
-	public UDPNIOEndPoint(ByteChannel socket, InetAddress localaddr,
-			int localport, InetAddress remoteaddr, int remoteport)
-			throws SocketException, UnknownHostException {
-		// we don't want to use the super implementation.
-		super();
-		super.stop();
-		if (socket == null)
-			throw new NullPointerException();
-		this.dgSocket = socket;
-		this.port = localport;
-		this.addr = localaddr;
-		dp.setAddress(remoteaddr);
-		dp.setPort(remoteport);
-	}
-
-	/**
-	 * start the endpoint. If the serverSocketModeEnabled flag is
-	 * <code>true</code>, a new connection can be handed off to an application.
-	 * The application needs to call #accept() to get the socket
-	 * 
-	 * @param serverSocketModeEnabled
-	 */
-	public void start(boolean serverSocketModeEnabled) {
-		serverSocketMode = serverSocketModeEnabled;
-		// start receive thread
-		Runnable receive = new Runnable() {
-
-			public void run() {
-				try {
-					doReceive();
-				} catch (Exception ex) {
-					logger.log(Level.WARNING, "", ex);
-				}
-			}
-		};
-		Thread t = UDTThreadFactory.get().newThread(receive);
-		t.setName("UDPEndpoint-" + t.getName());
-		t.setDaemon(true);
-		t.start();
-		logger.info("UDTEndpoint started.");
-	}
-
-	public void start() {
-		start(false);
-	}
-
-	public void stop() {
-		stopped = true;
-		try {
-			dgSocket.close();
-		} catch (IOException e) {
-			// TODO: warn
-		}
-	}
-
-	/**
-	 * @return the port which this client is bound to
-	 */
-	public int getLocalPort() {
-		return this.port;
-	}
-
-	/**
-	 * @return Gets the local address to which the socket is bound
-	 */
-	public InetAddress getLocalAddress() {
-		return this.addr;
-	}
-
-	UDTPacket getLastPacket() {
-		return lastPacket;
-	}
-
-	/**
-	 * wait the given time for a new connection
-	 * 
-	 * @param timeout
-	 *            - the time to wait
-	 * @param unit
-	 *            - the {@link TimeUnit}
-	 * @return a new {@link UDTSession}
-	 * @throws InterruptedException
-	 */
-	protected UDTSession accept(long timeout, TimeUnit unit)
-			throws InterruptedException {
-		return sessionHandoff.poll(timeout, unit);
-	}
-
-	public UDTSession getSession(long timeout, TimeUnit unit)
-			throws InterruptedException {
-		return accept(timeout, unit);
-	}
-
+	private final InetAddress addr;
 
 	/**
 	 * single receive, run in the receiverThread, see {@link #start()}
@@ -202,35 +98,110 @@ public class UDPNIOEndPoint extends UDPEndPoint {
 
 	private final Object lock = new Object();
 
+	/**
+	 * create an endpoint on the given socket
+	 * 
+	 * @param socket
+	 *            - a UDP datagram socket
+	 * @throws UnknownHostException
+	 * @throws SocketException
+	 */
+	public UDPNIOEndPoint(ByteChannel socket, InetAddress localaddr,
+			int localport, InetAddress remoteaddr, int remoteport)
+			throws SocketException, UnknownHostException {
+		// we don't want to use the super implementation.
+		super();
+		super.stop();
+		if (socket == null) {
+			throw new NullPointerException();
+		}
+		dgSocket = socket;
+		port = localport;
+		addr = localaddr;
+		dp.setAddress(remoteaddr);
+		dp.setPort(remoteport);
+	}
+
+	/**
+	 * wait the given time for a new connection
+	 * 
+	 * @param timeout
+	 *            - the time to wait
+	 * @param unit
+	 *            - the {@link TimeUnit}
+	 * @return a new {@link UDTSession}
+	 * @throws InterruptedException
+	 */
+	@Override
+	protected UDTSession accept(long timeout, TimeUnit unit)
+			throws InterruptedException {
+		return sessionHandoff.poll(timeout, unit);
+	}
+
+	@Override
 	protected void doReceive() throws IOException {
+		ByteBuffer hdr = ByteBuffer.wrap(new byte[4]);
+		IntBuffer hdrint = hdr.asIntBuffer();
+		ByteBuffer buf = ByteBuffer.wrap(new byte[DATAGRAM_SIZE]);
 		while (!stopped) {
 			try {
 				try {
-					ByteBuffer buf = ByteBuffer.allocate(DATAGRAM_SIZE);
-					// buf.rewind();
 					// will block until a packet is received or timeout has
 					// expired
+					hdr.rewind();
+					hdr.limit(hdr.capacity());
+					int hl = dgSocket.read(hdr);
+					if (hl == 0)
+						continue;
+					if (hl == -1)
+						return;
+					int length = hdrint.get();
+					buf.limit(length);
+					buf.rewind();
+
+					logger.info("expecting to receive " + length
+							+ " bytes... got space for " + buf.remaining());
+
 					int l = dgSocket.read(buf);
 					if (l == -1) {
 						return;
 					}
+					if (l == 0)
+						continue;
+
+					logger.info("but received " + l + " bytes.");
+					for (int i = 0; i < l; i++) {
+						if (buf.get(i) != 0)
+							break;
+						else if (i == l - 1)
+							throw new IOException("received " + l + " zeros.");
+					}
+					if (!buf.hasArray())
+						throw new IOException("expected received length " + l
+								+ " to be the same as limit after flipping");
 
 					Destination peer = new Destination(dp.getAddress(),
 							dp.getPort());
 					UDTPacket packet = PacketFactory.createPacket(buf.array(),
 							l);
 					lastPacket = packet;
+					peer.setSocketID(packet.getDestinationID());
+					logger.info("received socket/destination id "
+							+ peer.getSocketID());
 
 					// handle connection handshake
 					if (packet.isConnectionHandshake()) {
-						logger.log(Level.INFO, "got a packet: its a connection-handshake");
+						logger.log(Level.INFO,
+								"got a packet: its a connection-handshake");
 						synchronized (lock) {
 							Long id = Long.valueOf(packet.getDestinationID());
 							UDTSession session = getSession(id);
 							if (session == null) {
-								logger.log(Level.INFO, "got a packet: its a connection-handshake for a new session");
+								logger.info("got a packet: its a connection-handshake for a new session");
 								// don't need data in dp
 								session = new ServerSession(dp, this);
+								logger.info("new session/socket id="
+										+ session.getSocketID());
 								addSession(session.getSocketID(), session);
 								// TODO need to check peer to avoid duplicate
 								// server session
@@ -281,22 +252,104 @@ public class UDPNIOEndPoint extends UDPEndPoint {
 		}
 	}
 
+	@Override
 	protected void doSend(UDTPacket packet) throws IOException {
 		byte[] data = packet.getEncoded();
 		ByteBuffer buf = ByteBuffer.wrap(data);
-		dgSocket.write(buf);
+		logger.info("sending " + data.length + " bytes");
+		ByteBuffer hdr = ByteBuffer.allocate(4);
+		IntBuffer intBuffer = hdr.asIntBuffer();
+		intBuffer.put(data.length);
+		int n = dgSocket.write(hdr);
+		n += dgSocket.write(buf);
+		if (n != data.length + 4)
+			throw new IOException("did not send full data packet (4 + "
+					+ data.length + " bytes), only " + n + " bytes.");
 		// DatagramPacket dgp = packet.getSession().getDatagram();
 		// dgp.setData(data);
 		// dgSocket.write(ByteBuffer.wrap(dgp.getData(), dgp.getOffset(),
 		// dgp.getLength()));
 	}
 
-	public String toString() {
-		return "UDPEndpoint port=" + port;
+	@Override
+	UDTPacket getLastPacket() {
+		return lastPacket;
 	}
 
+
+	/**
+	 * @return Gets the local address to which the socket is bound
+	 */
+	@Override
+	public InetAddress getLocalAddress() {
+		return addr;
+	}
+
+	/**
+	 * @return the port which this client is bound to
+	 */
+	@Override
+	public int getLocalPort() {
+		return port;
+	}
+
+	public UDTSession getSession(long timeout, TimeUnit unit)
+			throws InterruptedException {
+		return accept(timeout, unit);
+	}
+
+	@Override
 	public void sendRaw(DatagramPacket dgp) throws IOException {
 		dgSocket.write(ByteBuffer.wrap(dgp.getData(), dgp.getOffset(),
 				dgp.getLength()));
+	}
+
+	@Override
+	public void start() {
+		start(false);
+	}
+
+	/**
+	 * start the endpoint. If the serverSocketModeEnabled flag is
+	 * <code>true</code>, a new connection can be handed off to an application.
+	 * The application needs to call #accept() to get the socket
+	 * 
+	 * @param serverSocketModeEnabled
+	 */
+	@Override
+	public void start(boolean serverSocketModeEnabled) {
+		serverSocketMode = serverSocketModeEnabled;
+		// start receive thread
+		Runnable receive = new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					doReceive();
+				} catch (Exception ex) {
+					logger.log(Level.WARNING, "", ex);
+				}
+			}
+		};
+		Thread t = UDTThreadFactory.get().newThread(receive);
+		t.setName("UDPEndpoint-" + t.getName());
+		t.setDaemon(true);
+		t.start();
+		logger.info("UDTEndpoint started.");
+	}
+
+	@Override
+	public void stop() {
+		stopped = true;
+		try {
+			dgSocket.close();
+		} catch (IOException e) {
+			// TODO: warn
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "UDPEndpoint port=" + port;
 	}
 }

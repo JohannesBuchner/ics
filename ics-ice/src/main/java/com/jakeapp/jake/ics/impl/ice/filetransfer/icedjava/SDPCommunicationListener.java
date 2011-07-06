@@ -21,17 +21,6 @@ import net.mc_cubed.icedjava.ice.SDPListener;
  */
 public abstract class SDPCommunicationListener implements SDPListener {
 
-	private SDPListener receiver;
-
-	public SDPCommunicationListener(SDPListener receiver) {
-		this.receiver = receiver;
-	}
-
-	protected void onReceive(Connection conn, List<Attribute> iceAttributes,
-			List<MediaDescription> iceMedias) throws SdpParseException {
-		receiver.updateMedia(conn, iceAttributes, iceMedias);
-	}
-
 	@Override
 	public void sendSession(SessionDescription session) throws SdpException {
 		throw new IllegalStateException(

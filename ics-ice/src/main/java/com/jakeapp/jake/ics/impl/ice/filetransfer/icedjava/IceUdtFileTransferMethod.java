@@ -1,10 +1,13 @@
 package com.jakeapp.jake.ics.impl.ice.filetransfer.icedjava;
 
 
-import java.io.IOException;
+import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
+import javax.sdp.SdpParseException;
 
 import org.apache.log4j.Logger;
 
@@ -29,34 +32,42 @@ public class IceUdtFileTransferMethod implements ITransferMethod,
 
 	static final String ADDRESS_RESPONSE = "<addressresponse/>";
 
-	private static final String CONNECT_REQUEST = "<connect/>";
-
 	static final String GOT_REQUESTED_FILE = "<file/>";
 
 	private IMsgService negotiationService;
 
 	private UserId myUserId;
 
+	@Inject
 	private final int maximalRequestAgeSeconds;
 
 	private Map<UserId, ClientRequestHandler> clientRequestHandlers = new HashMap<UserId, ClientRequestHandler>();
 
 	private ServerRequestHandler serverRequestHandler;
 
-	public IceUdtFileTransferMethod(int maximalRequestAgeSeconds,
-			IMsgService negotiationService, UserId user) {
+	private final IceConnect iceconnect;
+
+	private final IUdtOverIceConnect udtconnect;
+
+	public IceUdtFileTransferMethod(IMsgService negotiationService,
+			UserId user, IUdtOverIceConnect udtconnect,
+			int maximalRequestAgeSeconds) throws SdpParseException,
+			SocketException {
 		log.debug("creating IceUdtFileTransferMethod for user " + user);
-		this.maximalRequestAgeSeconds = maximalRequestAgeSeconds;
 		this.myUserId = user;
+		this.maximalRequestAgeSeconds = maximalRequestAgeSeconds;
 		this.negotiationService = negotiationService;
 		this.negotiationService.registerReceiveMessageListener(this);
+
+		this.iceconnect = new IceConnect(negotiationService);
+		this.udtconnect = udtconnect;
 	}
 
 	public ClientRequestHandler getClientConnect(UserId user) {
 		if (!clientRequestHandlers.containsKey(user)) {
 			ClientRequestHandler h = new ClientRequestHandler(
-					maximalRequestAgeSeconds, negotiationService, myUserId,
-					user);
+					negotiationService, iceconnect, udtconnect,
+					maximalRequestAgeSeconds, user, myUserId);
 			clientRequestHandlers.put(user, h);
 			new Thread(h).start();
 		}
@@ -72,7 +83,7 @@ public class IceUdtFileTransferMethod implements ITransferMethod,
 	}
 
 	@Override
-	public void receivedMessage(UserId from_userid, String content) {
+	public void receivedMessage(final UserId from_userid, String content) {
 		if (!content.startsWith(IceUdtTransferFactory.START)
 				|| !content.endsWith(IceUdtTransferFactory.END))
 			return;
@@ -83,14 +94,7 @@ public class IceUdtFileTransferMethod implements ITransferMethod,
 		log.debug(myUserId + ": receivedMessage : " + from_userid + " : "
 				+ inner);
 
-		if (inner.startsWith(CONNECT_REQUEST)) {
-			try {
-				UDTOverICEConnectFactory.getFor(negotiationService).initiate(
-						from_userid, true);
-			} catch (Exception e) {
-				log.warn("could not satisfy ICE connect request", e);
-			}
-		} else if (inner.startsWith(ADDRESS_REQUEST)) {
+		if (inner.startsWith(ADDRESS_REQUEST)) {
 			handleFileRequest(from_userid, inner);
 			/*
 			 * ADDRESS_RESPONSE:
@@ -163,12 +167,9 @@ public class IceUdtFileTransferMethod implements ITransferMethod,
 
 		if (!isServing()) {
 			log.debug("currently not serving");
-			return;
-		}
-		try {
+		} else {
+			log.debug("serving " + fr);
 			serverRequestHandler.serve(fr);
-		} catch (IOException e) {
-			log.warn(e);
 		}
 	}
 
@@ -183,7 +184,8 @@ public class IceUdtFileTransferMethod implements ITransferMethod,
 		log.debug(this.myUserId + ": starting to serve");
 
 		this.serverRequestHandler = new ServerRequestHandler(
-				negotiationService, this.myUserId, mapper, l);
+				negotiationService, iceconnect, udtconnect, this.myUserId,
+				mapper, l);
 	}
 
 	@Override

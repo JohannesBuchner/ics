@@ -15,8 +15,8 @@ import udt.UDTSocket;
 import udt.util.Util;
 
 import com.jakeapp.availablelater.AvailableLater;
-import com.jakeapp.availablelater.AvailableLaterObject;
 import com.jakeapp.availablelater.AvailableLaterWaiter;
+import com.jakeapp.jake.ics.UserId;
 import com.jakeapp.jake.ics.impl.mock.MockUserId;
 import com.jakeapp.jake.ics.msgservice.IMsgService;
 
@@ -30,68 +30,65 @@ public class TestUDTOverICEConnect {
 
 	private static final String MESSAGE2 = "secret answer";
 
-	private UDTOverICEConnect conClient;
-
-	private UDTOverICEConnect conServer;
-
 	private IMsgService msgClient;
 
 	private IMsgService msgServer;
 
+	private IIceConnect conClient;
+
+	private IIceConnect conServer;
+
+	private UserId serverUserId = new MockUserId("myserver@localhost");
+
+	private UserId clientUserId = new MockUserId("myclient@localhost");
+
+	private IUdtOverIceConnect udtconnect;
+
+	private AvailableLater<UDTSocket> createClient() {
+		Assert.assertTrue(conClient.hasCandidatePair(serverUserId));
+		return udtconnect.connect(conClient.getSocket(),
+				conClient.getNomination(serverUserId), false);
+	}
+
+	private AvailableLater<UDTSocket> createServer() {
+		Assert.assertFalse(conServer.hasCandidatePair(clientUserId));
+		return udtconnect.connect(conServer.getSocket(),
+				conServer.getNomination(clientUserId), true);
+	}
+
 	@Before
 	public void setUp() throws Exception {
-		msgServer = MockConnectingMsgService.createInstance(new MockUserId(
-				"myserver@localhost"));
-		msgClient = MockConnectingMsgService.createInstance(new MockUserId(
-				"myclient@localhost"));
+		msgServer = MockConnectingMsgService.createInstance(serverUserId);
+		msgClient = MockConnectingMsgService.createInstance(clientUserId);
+		udtconnect = new UdtOverIceAddressesConnect();
+		conClient = new IceConnect(msgClient);
+		conServer = new IceConnect(msgServer);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		if (conServer != null)
-			conServer.shutdown(true);
-		if (conClient != null)
-			conClient.shutdown(true);
-
+		if (conServer != null) {
+			conServer.close(clientUserId);
+		}
+		if (conClient != null) {
+			conClient.close(serverUserId);
+		}
 	}
 
-	private AvailableLater<UDTSocket> createServer() {
-		return new AvailableLaterObject<UDTSocket>() {
-
-			@Override
-			public UDTSocket calculate() throws Exception {
-				log.debug("initializing server");
-				conServer = new UDTOverICEConnect(msgServer);
-				return conServer.initiateSending(new MockUserId(
-						"myclient@localhost"));
-			}
-		}.start();
-	}
-
-	private AvailableLater<UDTSocket> createClient() {
-		return new AvailableLaterObject<UDTSocket>() {
-
-			@Override
-			public UDTSocket calculate() throws Exception {
-				log.debug("initializing client");
-				conClient = new UDTOverICEConnect(msgClient);
-				log.debug("initializing client");
-				return conClient.initiateReceiving(new MockUserId(
-						"myserver@localhost"));
-			}
-		}.start();
-	}
-
-	@Test
+	@Test()
 	public void testConnect() throws Exception {
 		log.debug("logging server & client in");
 		log.debug("both logged in.");
 		AvailableLater<UDTSocket> avlServer = createServer();
+		log.debug("waiting for negotiation");
+		// client can only be found after server has started negotiation.
+		AvailableLaterWaiter.await(conServer.getNomination(clientUserId));
+
 		AvailableLater<UDTSocket> avlClient = createClient();
-		log.debug("waiting for client avl");
-		UDTSocket client = AvailableLaterWaiter.await(avlClient);
 		log.debug("waiting for server avl");
 		UDTSocket server = AvailableLaterWaiter.await(avlServer);
+		log.debug("waiting for client avl");
+		UDTSocket client = AvailableLaterWaiter.await(avlClient);
 		// ` server.
 		log.debug("writing on server");
 		PrintWriter pw = new PrintWriter(new OutputStreamWriter(

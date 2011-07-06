@@ -1,13 +1,15 @@
 package com.jakeapp.jake.ics.impl.ice.filetransfer.icedjava;
 
 import java.io.File;
-import java.io.IOException;
 import java.security.GeneralSecurityException;
+
+import net.mc_cubed.icedjava.ice.IcePeer;
 
 import org.apache.log4j.Logger;
 
 import udt.UDTSocket;
 
+import com.jakeapp.availablelater.AvailableLaterWrapperObject;
 import com.jakeapp.jake.ics.UserId;
 import com.jakeapp.jake.ics.filetransfer.FileRequestFileMapper;
 import com.jakeapp.jake.ics.filetransfer.IncomingTransferListener;
@@ -32,16 +34,23 @@ public class ServerRequestHandler {
 
 	private IncomingTransferListener incomingTransferListener;
 
-	public ServerRequestHandler(IMsgService negotiationService, UserId user,
+	private IIceConnect connect;
+
+	private IUdtOverIceConnect udtconnect;
+
+	public ServerRequestHandler(IMsgService negotiationService,
+			IIceConnect connect, IUdtOverIceConnect udtconnect, UserId user,
 			FileRequestFileMapper mapper, IncomingTransferListener l) {
 		this.myUserId = user;
 		log.debug("creating ServerRequestHandler for user " + myUserId);
 		this.mapper = mapper;
 		this.negotiationService = negotiationService;
 		this.incomingTransferListener = l;
+		this.connect = connect;
+		this.udtconnect = udtconnect;
 	}
 
-	public void serve(FileRequest fr) throws IOException {
+	public void serve(final FileRequest fr) {
 		boolean success;
 		String response = IceUdtTransferFactory.START;
 		AESObject aes = null;
@@ -78,43 +87,30 @@ public class ServerRequestHandler {
 		try {
 			this.negotiationService.sendMessage(fr.getPeer(), response);
 		} catch (Exception e) {
-			IceUdtTransferFactory.log.warn("sending failed", e);
+			log.warn("sending failed", e);
 		}
 		if (!success)
 			return;
 		if (aes == null)
 			throw new IllegalStateException(
 					"expected: success is true => aes exists");
+		final AESObject aesfinal = aes;
+		new AvailableLaterWrapperObject<Void, IcePeer>(connect.getNomination(fr
+				.getPeer())) {
 
-		// ok, now send content
-
-		UDTSocket socket = getSocketCached(fr.getPeer(), true);
-		IceUdtSendingFileTransfer ft = new IceUdtSendingFileTransfer(socket,
-				aes, fr);
-		new Thread(ft).start();
-		incomingTransferListener.started(ft);
-	}
-
-	private UDTSocket getSocketCached(UserId peer, boolean controlling)
-			throws IOException {
-		UDTSocket serverAdress;
-		try {
-			serverAdress = UDTOverICEConnectFactory.getFor(negotiationService)
-					.initiate(peer, controlling);
-			if (!serverAdress.isActive())
-				throw new IOException("Socket is not active (any more)");
-		} catch (Exception e) {
-			log.warn(e);
-			try {
-				serverAdress = UDTOverICEConnectFactory.getFor(
-						negotiationService).initiate(peer, controlling);
-			} catch (Exception e1) {
-				log.error(e);
-				throw new IOException("couldn't establish ICE connection with "
-						+ peer, e1);
+			@Override
+			public Void calculate() throws Exception {
+				log.debug("connecting ...");
+				UDTSocket socket = udtconnect.connect(connect.getSocket(),
+						getSourceResult(), true);
+				log.debug("sending content to client ...");
+				// ok, now send content
+				IceUdtSendingFileTransfer ft = new IceUdtSendingFileTransfer(
+						socket, aesfinal, fr);
+				incomingTransferListener.started(ft);
+				ft.run();
+				return null;
 			}
-		}
-		return serverAdress;
+		}.start();
 	}
-
 }

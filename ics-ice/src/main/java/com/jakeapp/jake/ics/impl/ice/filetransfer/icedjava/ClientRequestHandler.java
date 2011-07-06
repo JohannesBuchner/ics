@@ -10,10 +10,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import net.mc_cubed.icedjava.ice.IcePeer;
+
 import org.apache.log4j.Logger;
 
 import udt.UDTSocket;
 
+import com.jakeapp.availablelater.AvailableLater;
+import com.jakeapp.availablelater.AvailableLaterWaiter;
+import com.jakeapp.availablelater.AvailableLaterWrapperObject;
 import com.jakeapp.jake.ics.UserId;
 import com.jakeapp.jake.ics.exceptions.TimeoutException;
 import com.jakeapp.jake.ics.filetransfer.exceptions.OtherUserDoesntHaveRequestedContentException;
@@ -50,13 +55,20 @@ public class ClientRequestHandler implements Runnable {
 
 	private UDTSocket socket;
 
-	public ClientRequestHandler(int maximalRequestAgeSeconds,
-			IMsgService negotiationService, UserId user, UserId peer) {
+	private IIceConnect iceconnect;
+
+	private IUdtOverIceConnect udtconnect;
+
+	public ClientRequestHandler(IMsgService negotiationService,
+			IIceConnect iceconnect, IUdtOverIceConnect udtconnect,
+			int maximalRequestAgeSeconds, UserId user, UserId peer) {
 		log.debug("creating ClientRequestHandler for user " + user);
 		this.maximalRequestAgeSeconds = maximalRequestAgeSeconds;
 		this.myUserId = user;
 		this.peerUserId = peer;
 		this.negotiationService = negotiationService;
+		this.iceconnect = iceconnect;
+		this.udtconnect = udtconnect;
 
 		startTimeoutTimer();
 	}
@@ -69,23 +81,16 @@ public class ClientRequestHandler implements Runnable {
 	@Override
 	public void run() {
 		if (PROACTIVE) {
-			try {
-				socket = getSocketCached(peerUserId, false);
-			} catch (IOException e) {
-				log.warn("proactively acquiring socket failed", e);
-			}
+			iceconnect.getNomination(peerUserId);
 		}
 		while (running) {
 			try {
 				this.currentRequest = requests.poll(1, TimeUnit.SECONDS);
-				try {
-					socket = getSocketCached(peerUserId, false);
-				} catch (IOException e) {
-					log.warn("reactively acquiring socket failed", e);
-				}
-				if (this.currentRequest != null) {
-					handleRequest();
-				}
+				if (this.currentRequest == null)
+					continue;
+				log.debug("handling request " + currentRequest);
+				iceconnect.getNomination(peerUserId);
+				handleRequest();
 			} catch (InterruptedException e) {
 				// might have been stopped, otherwise loop will continue
 			}
@@ -102,7 +107,10 @@ public class ClientRequestHandler implements Runnable {
 		this.listeners.put(r, nsl);
 		// this.socketLastActive.put(r, new Date().getTime());
 		// this should be last as it triggers the further processing
-		this.requests.offer(r);
+		if (!this.requests.add(r)) {
+			log.warn("couldn't add request to queue");
+			throw new IllegalStateException("queue full, shouldn't happen");
+		}
 	}
 
 	private void handleRequest() {
@@ -124,28 +132,6 @@ public class ClientRequestHandler implements Runnable {
 			}
 			removeOutgoing(this.currentRequest);
 		}
-	}
-
-	private UDTSocket getSocketCached(UserId peer, boolean controlling)
-			throws IOException {
-		UDTSocket serverAdress;
-		try {
-			serverAdress = UDTOverICEConnectFactory.getFor(negotiationService)
-					.initiate(peer, controlling);
-			if (!serverAdress.isActive())
-				throw new IOException("Socket is not active (any more)");
-		} catch (Exception e) {
-			log.warn(e);
-			try {
-				serverAdress = UDTOverICEConnectFactory.getFor(
-						negotiationService).initiate(peer, controlling);
-			} catch (Exception e1) {
-				log.error(e);
-				throw new IOException("couldn't establish ICE connection with "
-						+ peer, e1);
-			}
-		}
-		return serverAdress;
 	}
 
 	private void removeOutgoing(FileRequest r) {
@@ -204,25 +190,38 @@ public class ClientRequestHandler implements Runnable {
 		}, 0, this.maximalRequestAgeSeconds * 1000 / 2);
 	}
 
-	public void receivedAck(FileRequest fr, AESObject aes) {
+	public void receivedAck(final FileRequest fr, final AESObject aes) {
 		// so the other user has the file and will send it to us through the
 		// socket (or is already transmitting).
 		if (!this.currentRequest.equals(fr)) {
 			log.warn("received a ack, but not for the right file request");
 			return;
 		}
-		if (socket == null) {
-			log.warn("received a Ack, but we don't have a socket");
+		try {
+			log.info("received server ACK, starting file transfer");
+			AvailableLater<IcePeer> peerAvl = iceconnect.getNomination(fr
+					.getPeer());
+			final INegotiationSuccessListener listener = getCurrentListener();
+			new AvailableLaterWrapperObject<Void, IcePeer>(peerAvl) {
+
+				@Override
+				public Void calculate() throws Exception {
+					log.debug("we finally have a peer -- connecting");
+					socket = udtconnect.connect(iceconnect.getSocket(),
+							getSourceResult(), false);
+					log.debug("connected -- running file transfer now");
+					IceUdtFileTransfer ft = new IceUdtFileTransfer(fr, socket,
+							aes);
+					listener.succeeded(ft);
+					ft.run();
+					return null;
+				}
+			}.start();
+		} catch (Exception e) {
+			log.warn("received a Ack, but we couldn't find a socket", e);
 			getCurrentListener()
 					.failed(new IOException(
 							"No socket connection available. Try again later."));
-			return;
-		}
-		try {
-			log.info("received server ACK, starting file transfer");
-			new Thread(new IceUdtFileTransfer(fr, socket, aes)).start();
-		} catch (IOException e) {
-			getCurrentListener().failed(e);
 		}
 	}
 

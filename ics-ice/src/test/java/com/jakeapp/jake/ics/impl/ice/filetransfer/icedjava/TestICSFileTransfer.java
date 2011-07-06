@@ -65,6 +65,8 @@ public class TestICSFileTransfer {
 
 	private Queue<ITransferMethod> runningServers = new ConcurrentLinkedQueue<ITransferMethod>();
 
+	private UdtOverIceAddressesConnect udtconnect;
+
 	@Before
 	public void setUp() throws Exception {
 		t = new Tracer();
@@ -75,7 +77,8 @@ public class TestICSFileTransfer {
 		fw.close();
 		testfile.deleteOnExit();
 		msgX = new SimpleFakeMessageExchanger();
-		sftf = new IceUdtTransferFactory(10);
+		udtconnect = new UdtOverIceAddressesConnect();
+		sftf = new IceUdtTransferFactory(udtconnect, 10);
 	}
 
 
@@ -247,10 +250,10 @@ public class TestICSFileTransfer {
 			}
 		});
 
-		Assert.assertTrue(this.t.awaitStep("clientside negotiation failed", 1,
+		Assert.assertTrue(this.t.awaitStep("clientside negotiation failed", 300,
 				TimeUnit.SECONDS));
 
-		Assert.assertTrue("timeout", this.t.isDone(1000, TimeUnit.MILLISECONDS));
+		Assert.assertTrue("timeout", this.t.isDone(10, TimeUnit.SECONDS));
 	}
 
 	@Test
