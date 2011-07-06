@@ -168,6 +168,8 @@ public class XmppUsersService implements IUsersService {
 						}
 					}
 					break;
+				} catch (NotLoggedInException e) {
+					this.log.warn("We got logged out somehow", e);
 				} catch (IOException e) {
 					// fixme: why is this fired that often?
 					this.log.debug("discovering capabilities failed!"
@@ -178,8 +180,6 @@ public class XmppUsersService implements IUsersService {
 					} catch (InterruptedException e1) {
 						// not important, don't care, best effort
 					}
-				} catch (NotLoggedInException e) {
-					this.log.warn("We got logged out somehow", e);
 				}
 			this.log.debug(Thread.currentThread() + " done");
 			XmppUsersService.this.runningDiscoveryThreads.remove(this.xmppid);
