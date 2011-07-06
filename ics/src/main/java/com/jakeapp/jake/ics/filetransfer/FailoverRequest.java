@@ -1,59 +1,55 @@
 package com.jakeapp.jake.ics.filetransfer;
 
-import com.jakeapp.jake.ics.filetransfer.negotiate.INegotiationSuccessListener;
-import com.jakeapp.jake.ics.filetransfer.negotiate.FileRequest;
-import com.jakeapp.jake.ics.filetransfer.methods.ITransferMethod;
-import com.jakeapp.jake.ics.filetransfer.runningtransfer.IFileTransfer;
+import java.util.Iterator;
+
 import org.apache.log4j.Logger;
 
-import java.util.List;
-
+import com.jakeapp.jake.ics.filetransfer.methods.ITransferMethod;
+import com.jakeapp.jake.ics.filetransfer.negotiate.FileRequest;
+import com.jakeapp.jake.ics.filetransfer.negotiate.INegotiationSuccessListener;
+import com.jakeapp.jake.ics.filetransfer.runningtransfer.IFileTransfer;
 
 public class FailoverRequest implements INegotiationSuccessListener {
 
 	private Logger log = Logger.getLogger(FailoverRequest.class);
 
-	private int counter = 0;
-
-	private List<ITransferMethod> methods;
-
 	private FileRequest request;
 
 	private INegotiationSuccessListener parentListener;
 
+	private Iterator<ITransferMethod> methodIterator;
+
 	public FailoverRequest(FileRequest request,
-			INegotiationSuccessListener nsl, final List<ITransferMethod> methods) {
+			INegotiationSuccessListener nsl, Iterable<ITransferMethod> methods) {
 		this.request = request;
 		this.parentListener = nsl;
-		this.methods = methods;
-		getTransferMethod(this.counter).request(this.request, this);
+		this.methodIterator = methods.iterator();
 	}
 
-	/**
-	 * returns null if index is out of range
-	 * 
-	 * @param index
-	 * @return
-	 */
-	private synchronized ITransferMethod getTransferMethod(int index) {
-		try {
-			return this.methods.get(index);
-		} catch (IndexOutOfBoundsException e) {
-			return null;
-		}
+	public void request() {
+		nextMethod().request(request, parentListener);
 	}
+
+	private ITransferMethod nextMethod() {
+		while (methodIterator.hasNext()) {
+			ITransferMethod m = methodIterator.next();
+			if (m == null)
+				return m;
+		}
+		return null;
+	}
+
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void failed(Exception reason) {
-		this.counter++;
 		// if
 		// (reason.getClass().equals(CommunicationProblemException.class)) {
-		ITransferMethod method = getTransferMethod(this.counter);
+		ITransferMethod method = nextMethod();
 		if (method != null) {
-			log.info("failing over to method#" + this.counter + " : " + method);
+			log.info("failing over to method " + method);
 			method.request(this.request, this);
 			return;
 		}
@@ -62,12 +58,10 @@ public class FailoverRequest implements INegotiationSuccessListener {
 			this.parentListener.failed(reason);
 		} catch (Exception ignored) {
 		}
-		// }
 	}
 
 	@Override
 	public void succeeded(IFileTransfer ft) {
-		log.info("success with method#" + this.counter);
 		try {
 			this.parentListener.succeeded(ft);
 		} catch (Exception ignored) {

@@ -37,7 +37,9 @@ public class FailoverCapableFileTransferService implements IFileTransferService 
 			INegotiationSuccessListener negotiationSuccessListener) {
 		if (this.methods.size() == 0)
 			throw new NullPointerException("register methods first");
-		new FailoverRequest(request, negotiationSuccessListener, methods);
+		FailoverRequest failoverRequest = new FailoverRequest(request,
+				negotiationSuccessListener, methods);
+		failoverRequest.request();
 	}
 
 	/**
