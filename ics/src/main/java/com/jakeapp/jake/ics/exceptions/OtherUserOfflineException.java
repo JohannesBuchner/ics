@@ -5,5 +5,5 @@ package com.jakeapp.jake.ics.exceptions;
  *         offline
  */
 @SuppressWarnings("serial")
-public class OtherUserOfflineException extends Exception {
+public class OtherUserOfflineException extends NetworkException {
 }
