@@ -65,7 +65,7 @@ public class TestICSFileTransfer {
 
 	private Queue<ITransferMethod> runningServers = new ConcurrentLinkedQueue<ITransferMethod>();
 
-	private UdtOverIceAddressesConnect udtconnect;
+	private IUdtOverIceConnect udtconnect;
 
 	@Before
 	public void setUp() throws Exception {

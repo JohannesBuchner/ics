@@ -7,6 +7,7 @@ import java.util.Vector;
 import javax.sdp.Attribute;
 import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
+import javax.sdp.Origin;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SdpParseException;
@@ -30,7 +31,7 @@ public abstract class SDPTextCommunicationListener extends
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void doUpdateMedia(Connection conn,
+	protected void doUpdateMedia(Origin origin, Connection conn,
 			Collection<Attribute> iceAttributes,
 			Collection<MediaDescription> iceMedias) throws SdpParseException {
 		String text;
@@ -39,6 +40,7 @@ public abstract class SDPTextCommunicationListener extends
 			session.setConnection(conn);
 			session.getAttributes(true).addAll(iceAttributes);
 			session.setMediaDescriptions(new Vector<MediaDescription>(iceMedias));
+			session.setOrigin(origin);
 			text = session.toString();
 		} catch (SdpException e) {
 			log.error(e);

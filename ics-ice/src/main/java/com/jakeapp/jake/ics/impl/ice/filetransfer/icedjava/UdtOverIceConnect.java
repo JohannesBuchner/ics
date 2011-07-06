@@ -51,16 +51,15 @@ public class UdtOverIceConnect extends IUdtOverIceConnect {
 			peerEnd.start(true);
 			while (session == null) {
 				session = peerEnd.getSession(10000, TimeUnit.MILLISECONDS);
-				log.debug("server: created session with id "
-						+ session.getSocketID());
+			}
+			log.debug("server: created session with id "
+					+ session.getSocketID());
 
-				// wait for handshake to complete
-				while (session != null && !session.isReady()
-						|| session.getSocket() == null) {
-					log.debug("server: waiting for handshake response: session ready? "
-							+ session.isReady());
-					Thread.sleep(100);
-				}
+			// wait for handshake to complete
+			while (!session.isReady() || session.getSocket() == null) {
+				log.debug("server: waiting for handshake response: session ready? "
+						+ session.isReady());
+				Thread.sleep(100);
 			}
 		} else {
 			ClientSession sess = new ClientSession(peerEnd, destination);

@@ -5,6 +5,7 @@ import java.util.List;
 import javax.sdp.Attribute;
 import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
+import javax.sdp.Origin;
 import javax.sdp.SdpException;
 
 import net.mc_cubed.icedjava.ice.IcePeer;
@@ -36,8 +37,9 @@ public interface IIceConnect {
 	 * @param media
 	 * @throws SdpException
 	 */
-	void updateMedia(UserId user, Connection conn, List<Attribute> attr,
-			List<MediaDescription> media) throws SdpException;
+	void updateMedia(UserId user, Origin origin, Connection conn,
+			List<Attribute> attr, List<MediaDescription> media)
+			throws SdpException;
 
 	/**
 	 * Negotiate, wait for negotiation to end, and return a candidate pair.

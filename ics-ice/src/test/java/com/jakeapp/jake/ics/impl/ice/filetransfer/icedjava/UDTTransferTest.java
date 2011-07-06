@@ -224,7 +224,7 @@ public class UDTTransferTest {
 		}.start();
 	}
 
-	@Test
+	@Test(timeout = 20000)
 	public void testConnect() throws Exception {
 		AvailableLater<UDTSocket> avlServer = createServer();
 		AvailableLater<UDTSocket> avlClient = createClient();

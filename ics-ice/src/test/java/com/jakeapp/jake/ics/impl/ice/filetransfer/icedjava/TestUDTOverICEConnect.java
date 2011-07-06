@@ -9,6 +9,7 @@ import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import udt.UDTSocket;
@@ -42,25 +43,10 @@ public class TestUDTOverICEConnect {
 
 	private UserId clientUserId = new MockUserId("myclient@localhost");
 
-	private IUdtOverIceConnect udtconnect;
-
-	private AvailableLater<UDTSocket> createClient() {
-		Assert.assertTrue(conClient.hasCandidatePair(serverUserId));
-		return udtconnect.connect(conClient.getSocket(),
-				conClient.getNomination(serverUserId), false);
-	}
-
-	private AvailableLater<UDTSocket> createServer() {
-		Assert.assertFalse(conServer.hasCandidatePair(clientUserId));
-		return udtconnect.connect(conServer.getSocket(),
-				conServer.getNomination(clientUserId), true);
-	}
-
 	@Before
 	public void setUp() throws Exception {
 		msgServer = MockConnectingMsgService.createInstance(serverUserId);
 		msgClient = MockConnectingMsgService.createInstance(clientUserId);
-		udtconnect = new UdtOverIceAddressesConnect();
 		conClient = new IceConnect(msgClient);
 		conServer = new IceConnect(msgServer);
 	}
@@ -75,16 +61,36 @@ public class TestUDTOverICEConnect {
 		}
 	}
 
-	@Test()
-	public void testConnect() throws Exception {
+	@Test(timeout = 30000)
+	public void testUdtOverIceAddressConnect() throws Exception {
+		testConnect(new UdtOverIceAddressesConnect());
+	}
+
+	@Test(timeout = 30000)
+	@Ignore
+	public void testUdtOverIceStreamsConnect() throws Exception {
+		testConnect(new UdtOverIceConnect());
+	}
+
+	public void testConnect(IUdtOverIceConnect udtconnect) throws Exception {
 		log.debug("logging server & client in");
 		log.debug("both logged in.");
-		AvailableLater<UDTSocket> avlServer = createServer();
 		log.debug("waiting for negotiation");
 		// client can only be found after server has started negotiation.
 		AvailableLaterWaiter.await(conServer.getNomination(clientUserId));
 
-		AvailableLater<UDTSocket> avlClient = createClient();
+		Assert.assertTrue(conServer.hasCandidatePair(clientUserId));
+		if (!conClient.hasCandidatePair(serverUserId))
+			Thread.sleep(10);
+		Assert.assertTrue(conClient.hasCandidatePair(serverUserId));
+
+		AvailableLater<UDTSocket> avlServer = udtconnect.connect(
+				conServer.getSocket(), conServer.getNomination(clientUserId),
+				true);
+		AvailableLater<UDTSocket> avlClient = udtconnect.connect(
+				conClient.getSocket(), conClient.getNomination(serverUserId),
+				false);
+
 		log.debug("waiting for server avl");
 		UDTSocket server = AvailableLaterWaiter.await(avlServer);
 		log.debug("waiting for client avl");

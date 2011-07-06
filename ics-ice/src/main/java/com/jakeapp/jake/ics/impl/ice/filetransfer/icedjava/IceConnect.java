@@ -10,6 +10,7 @@ import javax.sdp.Attribute;
 import javax.sdp.Connection;
 import javax.sdp.Media;
 import javax.sdp.MediaDescription;
+import javax.sdp.Origin;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SdpParseException;
@@ -23,11 +24,13 @@ import net.mc_cubed.icedjava.stun.StunUtil;
 
 import org.apache.log4j.Logger;
 import org.glassfish.grizzly.nio.transport.UDPNIOTransport;
+import org.junit.runner.notification.StoppedByUserException;
 
 import udt.UDTReceiver;
 
 import com.jakeapp.availablelater.AvailableLater;
 import com.jakeapp.availablelater.AvailableLaterObject;
+import com.jakeapp.availablelater.AvailableNowObject;
 import com.jakeapp.jake.ics.UserId;
 import com.jakeapp.jake.ics.msgservice.IMsgService;
 
@@ -85,20 +88,22 @@ public class IceConnect implements IIceConnect {
 	}
 
 	@Override
-	public void updateMedia(UserId user, Connection conn, List<Attribute> attr,
-			List<MediaDescription> media) throws SdpException {
+	public void updateMedia(UserId user, Origin origin, Connection conn,
+			List<Attribute> attr, List<MediaDescription> media)
+			throws SdpException {
 		synchronized (ices) {
 			IcePeer peer = ices.get(user);
 			if (peer == null) {
 				log.info("incoming ICE connect from " + user);
-				peer = IceFactory.createIcePeerControlled(socket);
+				peer = IceFactory.createIcePeer(user.getUserId(), true, socket);
 				peer.setSdpListener(new SDPOverICSForwarder(msg, user));
 				ices.put(user, peer);
+				peer.updateMedia(origin, conn, attr, media);
+				peer.start();
+			} else {
+				if (peer.getStatus() != IceStatus.STOPPED)
+					peer.updateMedia(origin, conn, attr, media);
 			}
-			peer.updateMedia(conn, attr, media);
-			// make sure its started, or, if its a client and this is the first
-			// message, start it.
-			peer.start();
 		}
 	}
 
@@ -120,6 +125,8 @@ public class IceConnect implements IIceConnect {
 
 	@Override
 	public AvailableLater<IcePeer> getNomination(final UserId user) {
+		if (hasCandidatePair(user))
+			return new AvailableNowObject<IcePeer>(get(user));
 		return new AvailableLaterObject<IcePeer>() {
 
 			@Override
@@ -151,7 +158,8 @@ public class IceConnect implements IIceConnect {
 				log.info("ICE connect succeeded");
 				CandidatePair a = peer.getNominated().get(socket)
 						.get(component);
-				log.info("ICE connect succeeded: pair: " + a);
+				log.info("ICE connect succeeded: pair: " + a + " controlling? "
+						+ peer.isLocalControlled());
 
 				return peer;
 			}
@@ -159,8 +167,9 @@ public class IceConnect implements IIceConnect {
 	}
 
 	private IcePeer startConnect(final UserId user) throws SdpException {
+		IcePeer peer;
 		synchronized (ices) {
-			IcePeer peer = ices.get(user);
+			peer = ices.get(user);
 			if (peer == null) {
 				log.debug("initiating ICE connection to " + user);
 				/*
@@ -170,7 +179,8 @@ public class IceConnect implements IIceConnect {
 				 * IcePeer. An IcePeer represents a remote target for this
 				 * IceSocket, or potentially, several IceSockets.
 				 */
-				peer = IceFactory.createIcePeerAgressive(socket);
+				peer = IceFactory.createIcePeer(user.toString(), true, socket);
+				ices.put(user, peer);
 
 				/*
 				 * Once you invoke start() on a peer, ICE processing will begin.
@@ -200,19 +210,17 @@ public class IceConnect implements IIceConnect {
 				 */
 				peer.setSdpListener(new SDPOverICSForwarder(msg, user));
 				peer.start();
-				ices.put(user, peer);
 			}
-			/*
-			 * At this point the network will already be churning away,
-			 * collecting candidates and preparing for ICE processing. This peer
-			 * will assume it is in the controlling role initially, and once
-			 * started, will attempt to send an SDP update to it's peer. How
-			 * this data reaches the peer MUST be defined by you using the
-			 * SDPListener interface, which you register using the
-			 * peer.setSdpListener() method.
-			 */
-			return peer;
 		}
+		/*
+		 * At this point the network will already be churning away, collecting
+		 * candidates and preparing for ICE processing. This peer will assume it
+		 * is in the controlling role initially, and once started, will attempt
+		 * to send an SDP update to it's peer. How this data reaches the peer
+		 * MUST be defined by you using the SDPListener interface, which you
+		 * register using the peer.setSdpListener() method.
+		 */
+		return peer;
 	}
 
 	protected void finalize() throws Throwable {
@@ -229,7 +237,8 @@ public class IceConnect implements IIceConnect {
 		 * Calling close() an an IceSocket will close all peer connections that
 		 * use that socket.
 		 */
-		get(user).close();
+		if (get(user) != null)
+			get(user).close();
 	}
 
 	@Override

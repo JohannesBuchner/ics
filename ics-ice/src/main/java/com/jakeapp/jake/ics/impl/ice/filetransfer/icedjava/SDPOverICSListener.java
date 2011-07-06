@@ -6,6 +6,7 @@ import java.util.List;
 import javax.sdp.Attribute;
 import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
+import javax.sdp.Origin;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
@@ -42,11 +43,12 @@ public class SDPOverICSListener implements IMessageReceiveListener {
 				SessionDescription session = SdpFactory.getInstance()
 						.createSessionDescription(content);
 				Connection conn = session.getConnection();
+				Origin origin = session.getOrigin();
 				List<Attribute> attr = new ArrayList<Attribute>(
 						session.getAttributes(true));
 				List<MediaDescription> media = new ArrayList<MediaDescription>(
 						session.getMediaDescriptions(true));
-				iceconnect.updateMedia(user, conn, attr, media);
+				iceconnect.updateMedia(user, origin, conn, attr, media);
 			} catch (SdpException e) {
 				log.warn("sdp couldn't handle the message we handed it: '"
 						+ text + "'", e);

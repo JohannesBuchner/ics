@@ -40,12 +40,8 @@ import com.jakeapp.jake.ics.impl.sockets.filetransfer.AESObject;
 
 public class TestICSFileTransferWithMocks {
 
-	private static final int SERVER_PORT = 0;
-
 	private static final Logger log = Logger
 			.getLogger(TestICSFileTransferWithMocks.class);
-
-	private String filename = "myfile.txt";
 
 	private Tracer t;
 

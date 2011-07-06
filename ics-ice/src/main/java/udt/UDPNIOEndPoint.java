@@ -46,8 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.beanutils.converters.ByteArrayConverter;
-
 import udt.packets.ConnectionHandshake;
 import udt.packets.Destination;
 import udt.packets.PacketFactory;
@@ -58,6 +56,8 @@ import udt.util.UDTThreadFactory;
  * dispatching them to the correct {@link UDTSession}
  */
 public class UDPNIOEndPoint extends UDPEndPoint {
+
+	private static final boolean USE_HEADER = false;
 
 	private static final Logger logger = Logger.getLogger(ClientSession.class
 			.getName());
@@ -148,19 +148,21 @@ public class UDPNIOEndPoint extends UDPEndPoint {
 				try {
 					// will block until a packet is received or timeout has
 					// expired
-					hdr.rewind();
-					hdr.limit(hdr.capacity());
-					int hl = dgSocket.read(hdr);
-					if (hl == 0)
-						continue;
-					if (hl == -1)
-						return;
-					int length = hdrint.get();
-					buf.limit(length);
 					buf.rewind();
-
-					logger.info("expecting to receive " + length
-							+ " bytes... got space for " + buf.remaining());
+					if (USE_HEADER) {
+						hdr.rewind();
+						hdr.limit(hdr.capacity());
+						int hl = dgSocket.read(hdr);
+						if (hl == 0)
+							continue;
+						if (hl == -1)
+							return;
+						int length = hdrint.get();
+						buf.limit(length);
+						logger.info("expecting to receive " + length
+								+ " bytes... got space for " + buf.remaining());
+					} else {
+					}
 
 					int l = dgSocket.read(buf);
 					if (l == -1) {
@@ -256,15 +258,22 @@ public class UDPNIOEndPoint extends UDPEndPoint {
 	protected void doSend(UDTPacket packet) throws IOException {
 		byte[] data = packet.getEncoded();
 		ByteBuffer buf = ByteBuffer.wrap(data);
-		logger.info("sending " + data.length + " bytes");
-		ByteBuffer hdr = ByteBuffer.allocate(4);
-		IntBuffer intBuffer = hdr.asIntBuffer();
-		intBuffer.put(data.length);
-		int n = dgSocket.write(hdr);
-		n += dgSocket.write(buf);
-		if (n != data.length + 4)
-			throw new IOException("did not send full data packet (4 + "
-					+ data.length + " bytes), only " + n + " bytes.");
+		if (USE_HEADER) {
+			logger.info("sending " + data.length + " bytes");
+			ByteBuffer hdr = ByteBuffer.allocate(4);
+			IntBuffer intBuffer = hdr.asIntBuffer();
+			intBuffer.put(data.length);
+			int n = dgSocket.write(hdr);
+			n += dgSocket.write(buf);
+			if (n != data.length + 4)
+				throw new IOException("did not send full data packet (4 + "
+						+ data.length + " bytes), only " + n + " bytes.");
+		} else {
+			int n = dgSocket.write(buf);
+			if (n != data.length)
+				throw new IOException("did not send full data packet ("
+						+ data.length + " bytes), only " + n + " bytes.");
+		}
 		// DatagramPacket dgp = packet.getSession().getDatagram();
 		// dgp.setData(data);
 		// dgSocket.write(ByteBuffer.wrap(dgp.getData(), dgp.getOffset(),
