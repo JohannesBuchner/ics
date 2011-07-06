@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>net.mc_cubed</groupId>
 			<artifactId>icedjava</artifactId>
-			<version>1.0-alpha2</version>
+			<version>1.0-rc1</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -92,44 +92,6 @@
 			<groupId>udt-java</groupId>
 			<artifactId>udt-java</artifactId>
 			<version>0.6-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.barchart.udt</groupId>
-			<artifactId>barchart-udt4</artifactId>
-			<version>1.0.2</version>
-			<type>jar</type>
-			<classifier>sources</classifier>
-			<scope>import</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.barchart.udt</groupId>
-			<artifactId>barchart-udt4-parent</artifactId>
-			<version>1.0.2</version>
-			<type>pom</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.barchart.udt</groupId>
-			<artifactId>barchart-udt4</artifactId>
-			<version>1.0.2</version>
-			<type>nar</type>
-			<classifier>amd64-Linux-g++-jni</classifier>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.barchart.udt</groupId>
-			<artifactId>barchart-udt4</artifactId>
-			<version>1.0.2</version>
-			<type>nar</type>
-			<classifier>i386-Linux-g++-jni</classifier>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.barchart.udt</groupId>
-			<artifactId>barchart-udt4</artifactId>
-			<version>1.0.2</version>
-			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
