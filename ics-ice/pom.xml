@@ -7,7 +7,7 @@
 	<name>ics-ice</name>
 	<version>1.3-SNAPSHOT</version>
 	<description>
-		Negotiating a connection using ICE/STUN.
+		Negotiating a connection using ICE/STUN, and transfer of AES-encrypted data using UDT.
 	</description>
 	<licenses>
 		<license>
